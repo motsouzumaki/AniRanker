@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AniRanker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header class="app-header">
+            <h1>AniRanker</h1>
+            <button id="darkModeToggle" class="dark-mode-toggle">🌙 Dark Mode</button>
+        </header>
+
+        <div class="search-container card">
+            <h2>Add from Search</h2>
+            <div class="search-controls">
+                <input type="text" id="searchInput" placeholder="Search AniList...">
+                <button id="searchButton" class="btn-primary">Search</button>
+            </div>
+            <div id="searchResults" class="results-box">
+                <!-- Search results will appear here -->
+            </div>
+        </div>
+
+        <div class="user-list-container card">
+            <h2>Import from AniList User</h2>
+            <div class="user-controls">
+                <input type="text" id="usernameInput" placeholder="Enter AniList Username">
+                <select id="statusFilter">
+                    <option value="COMPLETED">Completed</option>
+                    <option value="WATCHING">Watching</option>
+                    <option value="PLANNING">Plan to Watch</option>
+                    <option value="REPEATING">Repeating</option>
+                    <option value="PAUSED">Paused</option>
+                    <option value="DROPPED">Dropped</option>
+                </select>
+                <button id="fetchUserListButton" class="btn-secondary">Fetch List</button>
+            </div>
+
+            <div id="filterControls" class="filter-controls" style="display: none;">
+                <div class="filter-group">
+                    <label for="sortFilter">Sort By:</label>
+                    <select id="sortFilter">
+                        <option value="name">Name</option>
+                        <option value="score">Score</option>
+                        <option value="year">Year</option>
+                        <option value="format">Format</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="orderFilter">Order:</label>
+                    <select id="orderFilter">
+                        <option value="desc">Descending</option>
+                        <option value="asc">Ascending</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="formatFilter">Format:</label>
+                    <select id="formatFilter">
+                        <option value="all">All Formats</option>
+                        <option value="TV">TV</option>
+                        <option value="MOVIE">Movie</option>
+                        <option value="OVA">OVA</option>
+                        <option value="ONA">ONA</option>
+                        <option value="SPECIAL">Special</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="scoreFilter">Min Score:</label>
+                    <select id="scoreFilter">
+                        <option value="0">Any Score</option>
+                        <option value="6">6+</option>
+                        <option value="7">7+</option>
+                        <option value="8">8+</option>
+                        <option value="9">9+</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="userListResults" class="results-box">
+                <!-- User list results will appear here -->
+            </div>
+        </div>
+
+        <div class="rank-container card">
+            <h2>My Top Anime List</h2>
+            <p class="instruction">Drag and drop to reorder your ranking</p>
+            <ul id="rankedList" class="ranked-list">
+                <!-- Ranked items will appear here -->
+            </ul>
+            <div class="list-actions">
+                <button id="saveListButton" class="btn-success">Save List</button>
+                <button id="clearListButton" class="btn-danger">Clear List</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
