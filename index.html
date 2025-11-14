@@ -3,66 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AniRanker</title>
+    <title>AniRanker - Create Your Anime Rankings</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-
     <div class="container">
         <header class="app-header">
-            <h1>AniRanker</h1>
-            <button id="darkModeToggle" class="dark-mode-toggle">🌙 Dark Mode</button>
+            <h1><i class="fas fa-crown"></i> AniRanker</h1>
+            <button id="darkModeToggle" class="dark-mode-toggle">
+                <i class="fas fa-moon"></i> Dark Mode
+            </button>
         </header>
 
         <div class="search-container card">
-            <h2>Add from Search</h2>
+            <h2><i class="fas fa-search"></i> Add from Search</h2>
             <div class="search-controls">
-                <input type="text" id="searchInput" placeholder="Search AniList...">
-                <button id="searchButton" class="btn-primary">Search</button>
+                <input type="text" id="searchInput" placeholder="Search for anime or manga...">
+                <button id="searchButton" class="btn-primary">
+                    <i class="fas fa-search"></i> Search
+                </button>
             </div>
             <div id="searchResults" class="results-box">
-                <!-- Search results will appear here -->
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <p>Search for anime or manga to add to your list</p>
+                </div>
             </div>
         </div>
 
         <div class="user-list-container card">
-            <h2>Import from AniList User</h2>
+            <h2><i class="fas fa-users"></i> Import from AniList</h2>
             <div class="user-controls">
                 <input type="text" id="usernameInput" placeholder="Enter AniList Username">
                 <select id="statusFilter">
                     <option value="COMPLETED">Completed</option>
-                    <option value="WATCHING">Watching</option>
+                    <option value="CURRENT">Watching</option>
                     <option value="PLANNING">Plan to Watch</option>
                     <option value="REPEATING">Repeating</option>
                     <option value="PAUSED">Paused</option>
                     <option value="DROPPED">Dropped</option>
                 </select>
-                <button id="fetchUserListButton" class="btn-secondary">Fetch List</button>
+                <button id="fetchUserListButton" class="btn-secondary">
+                    <i class="fas fa-download"></i> Fetch List
+                </button>
             </div>
 
             <div id="filterControls" class="filter-controls" style="display: none;">
                 <div class="filter-group">
                     <label for="sortFilter">Sort By:</label>
                     <select id="sortFilter">
-                        <option value="name">Name</option>
-                        <option value="score">Score</option>
-                        <option value="year">Year</option>
-                        <option value="format">Format</option>
+                        <option value="TITLE_ROMAJI">Name</option>
+                        <option value="SCORE">Score</option>
+                        <option value="START_DATE">Year</option>
+                        <option value="FORMAT">Format</option>
                     </select>
                 </div>
                 
                 <div class="filter-group">
                     <label for="orderFilter">Order:</label>
                     <select id="orderFilter">
-                        <option value="desc">Descending</option>
-                        <option value="asc">Ascending</option>
+                        <option value="DESC">Descending</option>
+                        <option value="ASC">Ascending</option>
                     </select>
                 </div>
                 
                 <div class="filter-group">
                     <label for="formatFilter">Format:</label>
                     <select id="formatFilter">
-                        <option value="all">All Formats</option>
+                        <option value="ALL">All Formats</option>
                         <option value="TV">TV</option>
                         <option value="MOVIE">Movie</option>
                         <option value="OVA">OVA</option>
@@ -84,19 +93,30 @@
             </div>
             
             <div id="userListResults" class="results-box">
-                <!-- User list results will appear here -->
+                <div class="empty-state">
+                    <i class="fas fa-user"></i>
+                    <p>Enter a username and fetch their list</p>
+                </div>
             </div>
         </div>
 
-        <div class="rank-container card">
-            <h2>My Top Anime List</h2>
+        <div class="rank-container card" style="grid-column: 1 / -1;">
+            <h2><i class="fas fa-trophy"></i> My Top Anime List</h2>
             <p class="instruction">Drag and drop to reorder your ranking</p>
+            <div class="drag-hint">
+                <i class="fas fa-arrow-up-from-bracket"></i>
+                <p>Search or import items to start ranking</p>
+            </div>
             <ul id="rankedList" class="ranked-list">
                 <!-- Ranked items will appear here -->
             </ul>
             <div class="list-actions">
-                <button id="saveListButton" class="btn-success">Save List</button>
-                <button id="clearListButton" class="btn-danger">Clear List</button>
+                <button id="saveListButton" class="btn-success">
+                    <i class="fas fa-save"></i> Save List
+                </button>
+                <button id="clearListButton" class="btn-danger">
+                    <i class="fas fa-trash-alt"></i> Clear List
+                </button>
             </div>
         </div>
     </div>

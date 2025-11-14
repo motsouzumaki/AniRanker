@@ -36,23 +36,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------------------------------------
 
     function applyDarkMode(isDark) {
-        document.body.classList.toggle('dark-mode', isDark);
-        darkModeToggle.textContent = isDark ? '💡 Light Mode' : '🌙 Dark Mode';
-        localStorage.setItem('darkMode', isDark);
+        document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        darkModeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i> Light Mode' : '<i class="fas fa-moon"></i> Dark Mode';
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
     }
 
     function initDarkMode() {
-        const savedMode = localStorage.getItem('darkMode');
+        const savedMode = localStorage.getItem('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         
         // Default to system preference if no saved setting
-        const initialMode = savedMode ? savedMode === 'true' : prefersDark;
+        const initialMode = savedMode ? savedMode === 'dark' : prefersDark;
         applyDarkMode(initialMode);
     }
 
     darkModeToggle.addEventListener('click', () => {
-        const isDark = !document.body.classList.contains('dark-mode');
-        applyDarkMode(isDark);
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        applyDarkMode(!isDark);
     });
     
     // ----------------------------------------------------------------------
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let filteredEntries = [...currentUserEntries];
         
         // Filter by format
-        if (formatFilterValue !== 'all') {
+        if (formatFilterValue !== 'ALL') {
             filteredEntries = filteredEntries.filter(entry => 
                 entry.media.format === formatFilterValue
             );
@@ -254,33 +254,33 @@ document.addEventListener('DOMContentLoaded', () => {
             let valA, valB;
 
             switch (sortBy) {
-                case 'score':
+                case 'SCORE':
                     valA = a.score || 0;
                     valB = b.score || 0;
                     break;
-                case 'year':
+                case 'START_DATE':
                     valA = a.media.startDate.year || 0;
                     valB = b.media.startDate.year || 0;
                     break;
-                case 'format':
+                case 'FORMAT':
                     valA = a.media.format || '';
                     valB = b.media.format || '';
                     break;
-                case 'name':
+                case 'TITLE_ROMAJI':
                 default:
                     valA = a.media.title.romaji || a.media.title.english || '';
                     valB = b.media.title.romaji || b.media.title.english || '';
                     if (valA === valB) return 0;
-                    if (sortOrder === 'asc') return valA.localeCompare(valB);
+                    if (sortOrder === 'ASC') return valA.localeCompare(valB);
                     return valB.localeCompare(valA);
             }
             
             // For numeric sorts (score, year)
-            if (sortBy === 'name' || sortBy === 'format') {
-                if (sortOrder === 'asc') return valA.localeCompare(valB);
+            if (sortBy === 'TITLE_ROMAJI' || sortBy === 'FORMAT') {
+                if (sortOrder === 'ASC') return valA.localeCompare(valB);
                 return valB.localeCompare(valA);
             } else {
-                if (sortOrder === 'asc') return valA - valB;
+                if (sortOrder === 'ASC') return valA - valB;
                 return valB - valA;
             }
         });
@@ -309,18 +309,18 @@ document.addEventListener('DOMContentLoaded', () => {
         item.classList.add('result-item');
         
         const title = anime.title.romaji || anime.title.english || 'Untitled';
-        const cover = anime.coverImage.large || 'placeholder.png'; 
+        const cover = anime.coverImage.large || 'https://placehold.co/50x70/6a1cb0/ffffff?text=N/A'; 
         const scoreDisplay = score ? `Score: ${score}/10` : 'Score: N/A';
         const yearDisplay = year ? `Year: ${year}` : 'Year: N/A';
         const formatDisplay = format ? `Format: ${format}` : '';
 
         item.innerHTML = `
             <img src="${cover}" alt="${title}">
-            <div class="info">
-                <strong>${title}</strong>
-                <p>${scoreDisplay} | ${yearDisplay} | ${formatDisplay}</p>
+            <div class="result-info">
+                <div class="result-title">${title}</div>
+                <div class="result-meta">${scoreDisplay} | ${yearDisplay} | ${formatDisplay}</div>
             </div>
-            <button class="add-btn">Add</button>
+            <button class="btn-primary add-btn"><i class="fas fa-plus"></i> Add</button>
         `;
         
         // Replace the click listener logic
@@ -357,26 +357,35 @@ document.addEventListener('DOMContentLoaded', () => {
         rankedList.innerHTML = '';
 
         if (rankedAnime.length === 0) {
-            rankedList.innerHTML = '<p class="info-message">Your list is empty. Add some anime to get started!</p>';
+            const dragHint = document.querySelector('.drag-hint');
+            if (!dragHint) {
+                rankedList.innerHTML = '<p class="info-message">Your list is empty. Add some anime to get started!</p>';
+            } else {
+                dragHint.style.display = 'block';
+            }
             return;
         }
 
+        const dragHint = document.querySelector('.drag-hint');
+        if (dragHint) dragHint.style.display = 'none';
+
         rankedAnime.forEach((anime, index) => {
             const listItem = document.createElement('li');
-            listItem.classList.add('rank-item');
+            listItem.classList.add('ranked-item');
             listItem.draggable = true;
             listItem.dataset.id = anime.id;
 
             const title = anime.title.romaji || anime.title.english || 'Untitled';
-            const cover = anime.coverImage.large || 'placeholder.png';
+            const cover = anime.coverImage.large || 'https://placehold.co/40x60/8a2be2/ffffff?text=N/A';
 
             listItem.innerHTML = `
                 <div class="rank-number">${index + 1}</div>
                 <img src="${cover}" alt="${title}">
-                <div class="rank-info">
-                    <strong>${title}</strong>
+                <div class="ranked-info">
+                    <div class="ranked-title">${title}</div>
+                    <div class="ranked-meta">${anime.format || 'N/A'} • ${anime.startDate?.year || 'N/A'}</div>
                 </div>
-                <button class="remove-btn">Remove</button>
+                <button class="remove-btn"><i class="fas fa-times"></i></button>
             `;
 
             // Add drag events
