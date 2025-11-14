@@ -430,6 +430,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Exports the current list to a text file
+     */
+    function exportList() {
+        if (rankedAnime.length === 0) {
+            alert('Your list is empty! Add some anime before exporting.');
+            return;
+        }
+
+        let content = '';
+        rankedAnime.forEach((anime, index) => {
+            const title = anime.title.romaji || anime.title.english || 'Untitled';
+            content += `${index + 1}. ${title}\n`;
+        });
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'my-anime-list.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Show a temporary success message
+        const originalText = saveListButton.innerHTML;
+        saveListButton.innerHTML = '<i class="fas fa-file-export"></i> Exported!';
+        saveListButton.style.background = '#51cf66';
+        
+        setTimeout(() => {
+            saveListButton.innerHTML = originalText;
+            saveListButton.style.background = '';
+        }, 2000);
+    }
+
+    /**
      * Loads the list from localStorage
      */
     function loadList() {
@@ -549,7 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // List management listeners
-    saveListButton.addEventListener('click', saveList);
+    saveListButton.addEventListener('click', exportList); // Changed to exportList
     clearListButton.addEventListener('click', clearList);
 
     // Initialize Dark Mode and load list
