@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         item.classList.add('result-item');
         
         const title = anime.title.romaji || anime.title.english || 'Untitled';
-        const cover = anime.coverImage.large || 'https://placehold.co/50x70/6a1cb0/ffffff?text=N/A'; 
+        const cover = anime.coverImage.large || 'https://placehold.co/50x70/00d1ff/ffffff?text=N/A'; 
         const scoreDisplay = score ? `Score: ${score}/10` : 'Score: N/A';
         const yearDisplay = year ? `Year: ${year}` : 'Year: N/A';
         const formatDisplay = format ? `Format: ${format}` : '';
@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
             listItem.dataset.id = anime.id;
 
             const title = anime.title.romaji || anime.title.english || 'Untitled';
-            const cover = anime.coverImage.large || 'https://placehold.co/40x60/8a2be2/ffffff?text=N/A';
+            const cover = anime.coverImage.large || 'https://placehold.co/40x60/00d1ff/ffffff?text=N/A';
 
             listItem.innerHTML = `
                 <div class="rank-number">${index + 1}</div>
@@ -418,6 +418,15 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function saveList() {
         localStorage.setItem('rankedAnime', JSON.stringify(rankedAnime));
+        // Show a temporary success message
+        const originalText = saveListButton.innerHTML;
+        saveListButton.innerHTML = '<i class="fas fa-check"></i> Saved!';
+        saveListButton.style.background = '#51cf66';
+        
+        setTimeout(() => {
+            saveListButton.innerHTML = originalText;
+            saveListButton.style.background = '';
+        }, 2000);
     }
 
     /**
