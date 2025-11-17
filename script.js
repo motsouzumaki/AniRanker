@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formatFilter = document.getElementById('formatFilter');
     const scoreFilter = document.getElementById('scoreFilter');
     const saveListButton = document.getElementById('saveListButton');
+    const exportListButton = document.getElementById('exportListButton');
     const clearListButton = document.getElementById('clearListButton');
 
     // --- State & Constants ---
@@ -96,10 +97,20 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(ANILIST_API_URL, {
                 method: 'POST',
+                mode: 'cors',
+                cache: 'no-store',
                 headers: API_HEADERS,
                 body: JSON.stringify({ query: graphqlQuery, variables: variables })
             });
 
+            if (!response.ok) {
+                let detail = '';
+                try {
+                    const ct = response.headers.get('content-type') || '';
+                    detail = ct.includes('application/json') ? JSON.stringify(await response.json()) : await response.text();
+                } catch {}
+                throw new Error(`Network error: ${response.status} ${response.statusText}${detail ? ' - ' + detail.slice(0,200) : ''}`);
+            }
             const data = await response.json();
 
             if (data.errors) {
@@ -170,10 +181,20 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(ANILIST_API_URL, {
                 method: 'POST',
+                mode: 'cors',
+                cache: 'no-store',
                 headers: API_HEADERS,
                 body: JSON.stringify({ query: graphqlQuery, variables: variables })
             });
 
+            if (!response.ok) {
+                let detail = '';
+                try {
+                    const ct = response.headers.get('content-type') || '';
+                    detail = ct.includes('application/json') ? JSON.stringify(await response.json()) : await response.text();
+                } catch {}
+                throw new Error(`Network error: ${response.status} ${response.statusText}${detail ? ' - ' + detail.slice(0,200) : ''}`);
+            }
             const data = await response.json();
 
             if (data.errors) {
@@ -310,15 +331,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const title = anime.title.romaji || anime.title.english || 'Untitled';
         const cover = anime.coverImage.large || 'https://placehold.co/50x70/00d1ff/ffffff?text=N/A'; 
-        const scoreDisplay = score ? `Score: ${score}/10` : 'Score: N/A';
-        const yearDisplay = year ? `Year: ${year}` : 'Year: N/A';
-        const formatDisplay = format ? `Format: ${format}` : '';
+        const scoreDisplay = score ? `<span class="meta-pill score-pill">${score}/10</span>` : '';
+        const yearDisplay = year ? `<span class="meta-pill year-pill">${year}</span>` : '';
+        const formatDisplay = format ? `<span class="chip chip-format">${format}</span>` : '';
 
         item.innerHTML = `
             <img src="${cover}" alt="${title}">
             <div class="result-info">
                 <div class="result-title">${title}</div>
-                <div class="result-meta">${scoreDisplay} | ${yearDisplay} | ${formatDisplay}</div>
+                <div class="result-meta">${scoreDisplay}${yearDisplay}${formatDisplay}</div>
             </div>
             <button class="btn-primary add-btn"><i class="fas fa-plus"></i> Add</button>
         `;
@@ -455,13 +476,13 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(url);
 
         // Show a temporary success message
-        const originalText = saveListButton.innerHTML;
-        saveListButton.innerHTML = '<i class="fas fa-file-export"></i> Exported!';
-        saveListButton.style.background = '#51cf66';
+        const originalText = exportListButton.innerHTML;
+        exportListButton.innerHTML = '<i class="fas fa-file-export"></i> Exported!';
+        exportListButton.style.background = '#51cf66';
         
         setTimeout(() => {
-            saveListButton.innerHTML = originalText;
-            saveListButton.style.background = '';
+            exportListButton.innerHTML = originalText;
+            exportListButton.style.background = '';
         }, 2000);
     }
 
@@ -585,10 +606,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // List management listeners
-    saveListButton.addEventListener('click', exportList); // Changed to exportList
+    saveListButton.addEventListener('click', saveList);
+    exportListButton.addEventListener('click', exportList);
     clearListButton.addEventListener('click', clearList);
 
     // Initialize Dark Mode and load list
     initDarkMode();
     loadList();
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
 });

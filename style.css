@@ -74,7 +74,10 @@ body {
   font-size: 2rem;
   font-weight: 700;
   letter-spacing: -0.5px;
-  color: var(--primary);
+  background: linear-gradient(90deg, var(--primary), #7aa2ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .dark-mode-toggle {
@@ -233,8 +236,38 @@ input:focus, select:focus {
 }
 
 .result-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
   font-size: 0.85rem;
   color: var(--text-secondary);
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: rgba(0, 209, 255, 0.12);
+  border: 1px solid var(--border-color);
+}
+.score-pill {
+  border-color: var(--success);
+}
+.year-pill {
+  border-color: var(--secondary);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--light-card);
+}
+.chip-format {
+  border-color: var(--primary);
 }
 
 .filter-controls {
@@ -278,8 +311,8 @@ input:focus, select:focus {
 }
 
 .ranked-item {
-  background: var(--light-card);
-  border-radius: 8px;
+  background: var(--card-bg);
+  border-radius: 12px;
   padding: 16px;
   margin-bottom: 12px;
   display: flex;
@@ -287,7 +320,6 @@ input:focus, select:focus {
   gap: 12px;
   cursor: move;
   transition: var(--transition);
-  border-left: 4px solid var(--primary);
   border: 1px solid var(--border-color);
 }
 
