@@ -98,7 +98,7 @@
                 </div>
             </div>
             
-            <div id="userListResults" class="results-box">
+            <div id="userListResults" class="results-box user-results-grid">
                 <div class="empty-state">
                     <i class="fas fa-user"></i>
                     <p>Enter a username and fetch their list</p>
@@ -128,8 +128,32 @@
                 </button>
             </div>
         </div>
+
+        <div class="grid-preview card" style="grid-column: 1 / -1;">
+            <div class="grid-preview-header">
+                <div>
+                    <h2><i class="fas fa-th-large"></i> Shareable Ranking Grid</h2>
+                    <p class="grid-subtitle">Preview updates automatically as you edit your ranked list.</p>
+                </div>
+                <button id="downloadGridButton" class="btn-primary" disabled>
+                    <i class="fas fa-download"></i> Download PNG
+                </button>
+            </div>
+            <p class="grid-hint">
+                We pack your covers into the smallest square grid possible (e.g., 50 anime → 8×8). Empty slots stay transparent in the download.
+            </p>
+            <div class="grid-preview-wrapper">
+                <div id="rankingGrid" class="ranking-grid">
+                    <div class="grid-empty-state">
+                        <i class="fas fa-image"></i>
+                        <p>Add anime to your ranked list to generate a grid preview.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveListButton = document.getElementById('saveListButton');
     const exportListButton = document.getElementById('exportListButton');
     const clearListButton = document.getElementById('clearListButton');
+    const rankingGrid = document.getElementById('rankingGrid');
+    const downloadGridButton = document.getElementById('downloadGridButton');
 
     // --- State & Constants ---
     const ANILIST_API_URL = 'https://graphql.anilist.co';
@@ -27,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     };
+    const FALLBACK_SQUARE = 'https://placehold.co/600x600/00d1ff/ffffff?text=Ani';
 
     let rankedAnime = [];
     let draggedItem = null;
@@ -399,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 dragHint.style.display = 'block';
             }
+            renderRankingGrid();
             return;
         }
 
@@ -454,6 +458,120 @@ document.addEventListener('DOMContentLoaded', () => {
 
             rankedList.appendChild(listItem);
         });
+
+        renderRankingGrid();
+    }
+
+    function renderRankingGrid() {
+        if (!rankingGrid) return;
+
+        const total = rankedAnime.length;
+
+        if (total === 0) {
+            rankingGrid.style.gridTemplateColumns = '';
+            rankingGrid.innerHTML = `
+                <div class="grid-empty-state">
+                    <i class="fas fa-image"></i>
+                    <p>Add anime to your ranked list to generate a grid preview.</p>
+                </div>
+            `;
+            if (downloadGridButton) {
+                downloadGridButton.disabled = true;
+            }
+            return;
+        }
+
+        const gridSize = Math.ceil(Math.sqrt(total));
+        const slots = gridSize * gridSize;
+
+        rankingGrid.innerHTML = '';
+        rankingGrid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+
+        rankedAnime.forEach((anime, index) => {
+            const title = anime.title.romaji || anime.title.english || 'Untitled';
+            const cover = anime.coverImage?.extraLarge || anime.coverImage?.large || FALLBACK_SQUARE;
+            const safeCover = cover.replace(/"/g, '\\"');
+
+            const tile = document.createElement('div');
+            tile.className = 'grid-tile';
+
+            const coverEl = document.createElement('div');
+            coverEl.className = 'grid-cover';
+            coverEl.style.backgroundImage = `url("${safeCover}")`;
+            coverEl.setAttribute('role', 'img');
+            coverEl.setAttribute('aria-label', title);
+
+            const rankLabel = document.createElement('div');
+            rankLabel.className = 'grid-rank';
+            rankLabel.textContent = `#${index + 1}`;
+
+            tile.appendChild(coverEl);
+            tile.appendChild(rankLabel);
+            rankingGrid.appendChild(tile);
+        });
+
+        for (let i = total; i < slots; i++) {
+            const emptyTile = document.createElement('div');
+            emptyTile.className = 'grid-tile grid-tile--empty';
+            rankingGrid.appendChild(emptyTile);
+        }
+
+        if (downloadGridButton) {
+            downloadGridButton.disabled = false;
+        }
+    }
+
+    async function ensureGridImagesLoaded() {
+        if (!rankingGrid) return;
+        const covers = rankingGrid.querySelectorAll('.grid-cover');
+        const tasks = Array.from(covers).map(el => {
+            const bg = getComputedStyle(el).backgroundImage || '';
+            const m = bg.match(/url\(["']?(.*?)["']?\)/);
+            const src = m && m[1] ? m[1] : null;
+            if (!src) return Promise.resolve();
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+                img.src = src;
+            });
+        });
+        await Promise.all(tasks);
+    }
+
+    async function downloadRankingGrid() {
+        if (!rankingGrid || rankedAnime.length === 0) return;
+        if (typeof html2canvas !== 'function') {
+            alert('Grid export requires html2canvas. Please check your connection and try again.');
+            return;
+        }
+
+        const originalLabel = downloadGridButton.innerHTML;
+        downloadGridButton.disabled = true;
+        downloadGridButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+
+        try {
+            await ensureGridImagesLoaded();
+            const canvas = await html2canvas(rankingGrid, {
+                backgroundColor: getComputedStyle(document.body).getPropertyValue('--dark-bg').trim() || '#111',
+                scale: Math.max(2, window.devicePixelRatio || 1),
+                useCORS: true,
+                allowTaint: false,
+                imageTimeout: 15000
+            });
+
+            const link = document.createElement('a');
+            link.download = `ani-ranker-grid-${rankedAnime.length}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (error) {
+            console.error('Error exporting grid:', error);
+            alert('Something went wrong while exporting the grid. Please try again.');
+        } finally {
+            downloadGridButton.innerHTML = originalLabel;
+            downloadGridButton.disabled = rankedAnime.length === 0;
+        }
     }
 
     function moveAnime(animeId, delta) {
@@ -690,10 +808,14 @@ document.addEventListener('DOMContentLoaded', () => {
     saveListButton.addEventListener('click', saveList);
     exportListButton.addEventListener('click', exportList);
     clearListButton.addEventListener('click', clearList);
+    if (downloadGridButton) {
+        downloadGridButton.addEventListener('click', downloadRankingGrid);
+    }
 
     // Initialize Dark Mode and load list
     initDarkMode();
     loadList();
+    renderRankingGrid();
 
     rankedList.addEventListener('pointermove', handlePointerMove);
     document.addEventListener('pointerup', handlePointerUp);
