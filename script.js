@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let rankedAnime = [];
     let draggedItem = null;
+    let pointerDraggedItem = null;
+    let pointerDragging = false;
     let currentUserEntries = []; // Stores the raw fetched entries for local filtering
 
     // ----------------------------------------------------------------------
@@ -153,21 +155,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         userListResults.innerHTML = `<p class="loading-message">Fetching ${username}'s list...</p>`;
-        searchResults.innerHTML = ''; 
-        filterControls.style.display = 'none'; // Hide filters during fetch
+        searchResults.innerHTML = '';
+        filterControls.style.display = 'none';
 
-        const graphqlQuery = `
-            query ($username: String) {
-              MediaListCollection(userName: $username, type: ANIME) {
+        const userQuery = `
+            query ($name: String) {
+              User(name: $name) { id name }
+            }
+        `;
+        const listQuery = `
+            query ($userId: Int) {
+              MediaListCollection(userId: $userId, type: ANIME) {
                 lists {
                   entries {
-                    media {
-                      id
-                      title { romaji english }
-                      coverImage { large }
-                      startDate { year }
-                      format
-                    }
+                    media { id title { romaji english } coverImage { large } startDate { year } format }
                     status
                     score
                   }
@@ -175,50 +176,64 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             }
         `;
-        
-        const variables = { username: username };
 
         try {
-            const response = await fetch(ANILIST_API_URL, {
+            const userRes = await fetch(ANILIST_API_URL, {
                 method: 'POST',
                 mode: 'cors',
                 cache: 'no-store',
                 headers: API_HEADERS,
-                body: JSON.stringify({ query: graphqlQuery, variables: variables })
+                body: JSON.stringify({ query: userQuery, variables: { name: username } })
             });
-
-            if (!response.ok) {
+            if (!userRes.ok) {
                 let detail = '';
                 try {
-                    const ct = response.headers.get('content-type') || '';
-                    detail = ct.includes('application/json') ? JSON.stringify(await response.json()) : await response.text();
+                    const ct = userRes.headers.get('content-type') || '';
+                    detail = ct.includes('application/json') ? JSON.stringify(await userRes.json()) : await userRes.text();
                 } catch {}
-                throw new Error(`Network error: ${response.status} ${response.statusText}${detail ? ' - ' + detail.slice(0,200) : ''}`);
+                throw new Error(`Network error: ${userRes.status} ${userRes.statusText}${detail ? ' - ' + detail.slice(0,200) : ''}`);
             }
-            const data = await response.json();
-
-            if (data.errors) {
-                throw new Error(data.errors[0].message);
-            }
-
-            if (!data.data.MediaListCollection) {
-                throw new Error("User not found or their list is private/empty.");
+            const userData = await userRes.json();
+            const user = userData.data?.User;
+            if (!user) {
+                userListResults.innerHTML = `<p class="error-message">User not found. Check the username or try exact casing.</p>`;
+                return;
             }
 
-            const allLists = data.data.MediaListCollection.lists;
-            
-            // Flatten all entries and filter by the selected status
+            const listRes = await fetch(ANILIST_API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                cache: 'no-store',
+                headers: API_HEADERS,
+                body: JSON.stringify({ query: listQuery, variables: { userId: user.id } })
+            });
+            if (!listRes.ok) {
+                let detail = '';
+                try {
+                    const ct = listRes.headers.get('content-type') || '';
+                    detail = ct.includes('application/json') ? JSON.stringify(await listRes.json()) : await listRes.text();
+                } catch {}
+                throw new Error(`Network error: ${listRes.status} ${listRes.statusText}${detail ? ' - ' + detail.slice(0,200) : ''}`);
+            }
+            const listData = await listRes.json();
+
+            if (listData.errors) {
+                throw new Error(listData.errors[0].message);
+            }
+            if (!listData.data?.MediaListCollection) {
+                userListResults.innerHTML = `<p class="error-message">No public anime list found for this user.</p>`;
+                return;
+            }
+
+            const allLists = listData.data.MediaListCollection.lists;
             const allEntries = allLists.flatMap(list => list.entries);
             const initialFilteredEntries = allEntries.filter(entry => entry.status === status);
 
-            // Store the initial filtered list for local manipulation
             currentUserEntries = initialFilteredEntries;
-
-            // Render the initial sorted/filtered view
             renderUserListResults();
 
         } catch (error) {
-            console.error("Error fetching user list:", error);
+            console.error('Error fetching user list:', error);
             userListResults.innerHTML = `<p class="error-message">Error: ${error.message}</p>`;
             filterControls.style.display = 'none';
         }
@@ -414,6 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
             listItem.addEventListener('dragend', handleDragEnd);
             listItem.addEventListener('dragover', handleDragOver);
             listItem.addEventListener('drop', handleDrop);
+            listItem.addEventListener('pointerdown', handlePointerDown);
 
             // Add remove functionality
             listItem.querySelector('.remove-btn').addEventListener('click', (e) => {
@@ -560,6 +576,44 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
+    function handlePointerDown(e) {
+        if (e.pointerType !== 'touch') return;
+        pointerDragging = true;
+        pointerDraggedItem = e.currentTarget;
+        pointerDraggedItem.classList.add('dragging');
+    }
+
+    function handlePointerMove(e) {
+        if (!pointerDragging) return;
+        e.preventDefault();
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const targetItem = el ? el.closest('li.ranked-item') : null;
+        if (targetItem && targetItem !== pointerDraggedItem) {
+            const draggedId = parseInt(pointerDraggedItem.dataset.id);
+            const targetId = parseInt(targetItem.dataset.id);
+            const draggedIndex = rankedAnime.findIndex(anime => anime.id === draggedId);
+            const targetIndex = rankedAnime.findIndex(anime => anime.id === targetId);
+            if (draggedIndex !== -1 && targetIndex !== -1) {
+                const [removed] = rankedAnime.splice(draggedIndex, 1);
+                rankedAnime.splice(targetIndex, 0, removed);
+                renderRankedList();
+                saveList();
+                const newEl = Array.from(rankedList.querySelectorAll('.ranked-item')).find(li => parseInt(li.dataset.id) === draggedId);
+                pointerDraggedItem = newEl || null;
+                if (pointerDraggedItem) pointerDraggedItem.classList.add('dragging');
+            }
+        }
+    }
+
+    function handlePointerUp() {
+        if (!pointerDragging) return;
+        pointerDragging = false;
+        if (pointerDraggedItem) {
+            pointerDraggedItem.classList.remove('dragging');
+            pointerDraggedItem = null;
+        }
+    }
+
     // ----------------------------------------------------------------------
     // ## Initializers & Event Listeners
     // ----------------------------------------------------------------------
@@ -613,6 +667,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Dark Mode and load list
     initDarkMode();
     loadList();
+
+    rankedList.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js');

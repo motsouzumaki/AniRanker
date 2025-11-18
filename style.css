@@ -330,6 +330,9 @@ input:focus, select:focus {
   cursor: move;
   transition: var(--transition);
   border: 1px solid var(--border-color);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .ranked-item:hover {
