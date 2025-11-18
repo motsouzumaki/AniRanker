@@ -13,7 +13,7 @@
   --border-color: #333333; /* AniList's border color */
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   --transition: all 0.3s ease;
-  --border-radius: 12px;
+  --border-radius: 20px;
   --success: #51cf66; /* High scores */
   --warning: #fcc419; /* Medium scores */
   --danger: #ff6b6b; /* Low scores */
@@ -65,9 +65,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 0;
+  padding: 12px 16px;
   margin-bottom: 20px;
-  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
 }
 
 .app-header h1 {
@@ -104,9 +106,9 @@ body {
   background: var(--card-bg);
   border-radius: var(--border-radius);
   padding: 24px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   transition: var(--transition);
-  border: 1px solid var(--border-color);
+  border: none;
 }
 
 .card:hover {
@@ -157,6 +159,9 @@ input:focus, select:focus {
   display: flex;
   align-items: center;
   gap: 8px;
+  border-radius: 9999px;
+  padding: 12px 22px;
+  box-shadow: 0 6px 16px rgba(0, 209, 255, 0.12);
 }
 
 .btn-primary {
@@ -202,12 +207,15 @@ input:focus, select:focus {
 
 .result-item {
   padding: 16px;
-  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg);
+  border-radius: 16px;
+  margin: 8px;
   display: flex;
   align-items: center;
   gap: 12px;
   cursor: pointer;
   transition: var(--transition);
+  border: 1px solid var(--border-color);
 }
 
 .result-item:last-child {
@@ -215,7 +223,8 @@ input:focus, select:focus {
 }
 
 .result-item:hover {
-  background: rgba(0, 209, 255, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
 .result-item img {
