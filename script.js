@@ -421,17 +421,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="ranked-title">${title}</div>
                     <div class="ranked-meta">${anime.format || 'N/A'} • ${anime.startDate?.year || 'N/A'}</div>
                 </div>
-                <button class="remove-btn"><i class="fas fa-times"></i></button>
+                <div class="rank-controls">
+                    <button class="rank-btn rank-up" aria-label="Move Up"><i class="fas fa-chevron-up"></i></button>
+                    <button class="rank-btn rank-down" aria-label="Move Down"><i class="fas fa-chevron-down"></i></button>
+                    <button class="remove-btn" aria-label="Remove"><i class="fas fa-times"></i></button>
+                </div>
             `;
 
-            // Add drag events
             listItem.addEventListener('dragstart', handleDragStart);
             listItem.addEventListener('dragend', handleDragEnd);
             listItem.addEventListener('dragover', handleDragOver);
             listItem.addEventListener('drop', handleDrop);
             listItem.addEventListener('pointerdown', handlePointerDown);
 
-            // Add remove functionality
+            const upBtn = listItem.querySelector('.rank-up');
+            const downBtn = listItem.querySelector('.rank-down');
+            upBtn.disabled = index === 0;
+            downBtn.disabled = index === rankedAnime.length - 1;
+            upBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                moveAnime(anime.id, -1);
+            });
+            downBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                moveAnime(anime.id, 1);
+            });
+
             listItem.querySelector('.remove-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
                 removeAnimeFromList(anime.id);
@@ -439,6 +454,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             rankedList.appendChild(listItem);
         });
+    }
+
+    function moveAnime(animeId, delta) {
+        const i = rankedAnime.findIndex(a => a.id === animeId);
+        if (i === -1) return;
+        const j = i + delta;
+        if (j < 0 || j >= rankedAnime.length) return;
+        const tmp = rankedAnime[i];
+        rankedAnime[i] = rankedAnime[j];
+        rankedAnime[j] = tmp;
+        renderRankedList();
+        saveList();
     }
 
     /**

@@ -387,6 +387,36 @@ input:focus, select:focus {
   justify-content: center;
 }
 
+.rank-controls {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.rank-btn {
+  background: var(--light-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rank-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.rank-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .list-actions {
   display: flex;
   gap: 12px;
