@@ -4,10 +4,13 @@ A sleek and modern web application for anime and manga enthusiasts to create, or
 
 ## Features
 
-- **Search Functionality**: Search the AniList database for anime and manga titles
-- **User List Import**: Import completed, watching, planned, and other status lists from AniList users
-- **Advanced Filtering**: Filter imported lists by format, score, and sort options
+- **Anime & Manga Search**: Search the AniList database for both anime and manga titles with type selector
+- **NSFW Content Filtering**: Automatically filters out adult content from all search results
+- **User List Import**: Import completed, watching, planned, and other status lists from AniList users for both anime and manga
+- **Advanced Filtering**: Filter imported lists by format (TV, Movie, OVA, Manga, Novel, etc.), score, and sort options
 - **Drag-and-Drop Ranking**: Intuitive drag-and-drop interface for ranking items
+- **5-Column Grid Preview**: Generate shareable ranking grids with a clean 5-column layout
+- **Grid Export**: Download your ranking grid as a PNG image
 - **Local Storage**: Lists are saved in your browser's local storage
 - **Dark/Light Mode**: Toggle between dark and light themes with persistent settings
 - **Responsive Design**: Works seamlessly on mobile, tablet, and desktop devices
@@ -37,27 +40,37 @@ A sleek and modern web application for anime and manga enthusiasts to create, or
 ## Usage
 
 1. **Search for Anime/Manga**:
+   - Select "Anime" or "Manga" from the type dropdown
    - Enter a title in the search box
    - Click "Search" or press Enter
    - Click on any result to add it to your ranked list
+   - Note: NSFW content is automatically filtered from results
 
 2. **Import from AniList**:
+   - Select "Anime" or "Manga" from the type dropdown
    - Enter an AniList username
-   - Select a status (e.g., Completed, Watching)
+   - Select a status (e.g., Completed, Watching/Reading)
    - Click "Fetch List"
    - Use the filter controls to refine the results
    - Click on any item to add it to your ranked list
 
 3. **Rank Your List**:
    - Drag and drop items to reorder them
+   - Use the up/down arrow buttons for precise positioning
    - Items will automatically be numbered 1, 2, 3, etc.
    - Click the "Remove" button to delete items
 
-4. **Manage Your List**:
-   - Click "Save List" to persist your rankings
+4. **Generate Shareable Grid**:
+   - Your ranked list automatically generates a 5-column grid preview
+   - Click "Download PNG" to save your ranking grid as an image
+   - Perfect for sharing on social media or with friends
+
+5. **Manage Your List**:
+   - Click "Save List" to persist your rankings in browser storage
+   - Click "Export List" to download as a text file
    - Click "Clear List" to remove all items (with confirmation)
 
-5. **Toggle Themes**:
+6. **Toggle Themes**:
    - Click the "Dark Mode"/"Light Mode" button to switch themes
    - Your preference will be saved between sessions
 
