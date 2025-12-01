@@ -25,143 +25,128 @@
         </header>
 
         <div class="search-container card">
-            <h2><i class="fas fa-search"></i> Add from Search</h2>
-            <div class="search-controls">
-                <select id="searchType" class="type-select">
-                    <option value="ANIME">Anime</option>
-                    <option value="MANGA">Manga</option>
+        </div>
+    </div>
+    </div>
+
+    <div class="user-list-container card">
+        <h2><i class="fas fa-users"></i> Import from AniList</h2>
+        <div class="user-controls">
+            <select id="importType" class="type-select">
+                <option value="ANIME">Anime</option>
+                <option value="MANGA">Manga</option>
+            </select>
+            <input type="text" id="usernameInput" placeholder="Enter AniList Username">
+            <select id="statusFilter">
+                <option value="COMPLETED">Completed</option>
+                <option value="CURRENT">Watching</option>
+                <option value="PLANNING">Plan to Watch</option>
+                <option value="REPEATING">Repeating</option>
+                <option value="PAUSED">Paused</option>
+                <option value="DROPPED">Dropped</option>
+            </select>
+            <button id="fetchUserListButton" class="btn-secondary">
+                <i class="fas fa-download"></i> Fetch List
+            </button>
+        </div>
+
+        <div id="filterControls" class="filter-controls" style="display: none;">
+            <div class="filter-group">
+                <label for="sortFilter">Sort By:</label>
+                <select id="sortFilter">
+                    <option value="TITLE_ROMAJI">Name</option>
+                    <option value="SCORE">Score</option>
+                    <option value="START_DATE">Year</option>
+                    <option value="FORMAT">Format</option>
                 </select>
-                <input type="text" id="searchInput" placeholder="Search for anime or manga...">
-                <button id="searchButton" class="btn-primary">
-                    <i class="fas fa-search"></i> Search
-                </button>
             </div>
-            <div id="searchResults" class="results-box">
-                <div class="empty-state">
-                    <i class="fas fa-search"></i>
-                    <p>Search for anime or manga to add to your list</p>
-                </div>
-            </div>
-        </div>
 
-        <div class="user-list-container card">
-            <h2><i class="fas fa-users"></i> Import from AniList</h2>
-            <div class="user-controls">
-                <select id="importType" class="type-select">
-                    <option value="ANIME">Anime</option>
-                    <option value="MANGA">Manga</option>
+            <div class="filter-group">
+                <label for="orderFilter">Order:</label>
+                <select id="orderFilter">
+                    <option value="DESC">Descending</option>
+                    <option value="ASC">Ascending</option>
                 </select>
-                <input type="text" id="usernameInput" placeholder="Enter AniList Username">
-                <select id="statusFilter">
-                    <option value="COMPLETED">Completed</option>
-                    <option value="CURRENT">Watching</option>
-                    <option value="PLANNING">Plan to Watch</option>
-                    <option value="REPEATING">Repeating</option>
-                    <option value="PAUSED">Paused</option>
-                    <option value="DROPPED">Dropped</option>
+            </div>
+
+            <div class="filter-group">
+                <label for="formatFilter">Format:</label>
+                <select id="formatFilter">
+                    <option value="ALL">All Formats</option>
+                    <option value="TV">TV</option>
+                    <option value="MOVIE">Movie</option>
+                    <option value="OVA">OVA</option>
+                    <option value="ONA">ONA</option>
+                    <option value="SPECIAL">Special</option>
                 </select>
-                <button id="fetchUserListButton" class="btn-secondary">
-                    <i class="fas fa-download"></i> Fetch List
-                </button>
             </div>
 
-            <div id="filterControls" class="filter-controls" style="display: none;">
-                <div class="filter-group">
-                    <label for="sortFilter">Sort By:</label>
-                    <select id="sortFilter">
-                        <option value="TITLE_ROMAJI">Name</option>
-                        <option value="SCORE">Score</option>
-                        <option value="START_DATE">Year</option>
-                        <option value="FORMAT">Format</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="orderFilter">Order:</label>
-                    <select id="orderFilter">
-                        <option value="DESC">Descending</option>
-                        <option value="ASC">Ascending</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="formatFilter">Format:</label>
-                    <select id="formatFilter">
-                        <option value="ALL">All Formats</option>
-                        <option value="TV">TV</option>
-                        <option value="MOVIE">Movie</option>
-                        <option value="OVA">OVA</option>
-                        <option value="ONA">ONA</option>
-                        <option value="SPECIAL">Special</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="scoreFilter">Min Score:</label>
-                    <select id="scoreFilter">
-                        <option value="0">Any Score</option>
-                        <option value="6">6+</option>
-                        <option value="7">7+</option>
-                        <option value="8">8+</option>
-                        <option value="9">9+</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="userListResults" class="results-box user-results-grid">
-                <div class="empty-state">
-                    <i class="fas fa-user"></i>
-                    <p>Enter a username and fetch their list</p>
-                </div>
+            <div class="filter-group">
+                <label for="scoreFilter">Min Score:</label>
+                <select id="scoreFilter">
+                    <option value="0">Any Score</option>
+                    <option value="6">6+</option>
+                    <option value="7">7+</option>
+                    <option value="8">8+</option>
+                    <option value="9">9+</option>
+                </select>
             </div>
         </div>
 
-        <div class="rank-container card" style="grid-column: 1 / -1;">
-            <h2><i class="fas fa-trophy"></i> My Top Anime List</h2>
-            <p class="instruction">Drag and drop to reorder your ranking</p>
-            <div class="drag-hint">
-                <i class="fas fa-arrow-up-from-bracket"></i>
-                <p>Search or import items to start ranking</p>
-            </div>
-            <ul id="rankedList" class="ranked-list">
-                <!-- Ranked items will appear here -->
-            </ul>
-            <div class="list-actions">
-                <button id="saveListButton" class="btn-success">
-                    <i class="fas fa-save"></i> Save List
-                </button>
-                <button id="exportListButton" class="btn-secondary">
-                    <i class="fas fa-file-export"></i> Export List
-                </button>
-                <button id="clearListButton" class="btn-danger">
-                    <i class="fas fa-trash-alt"></i> Clear List
-                </button>
+        <div id="userListResults" class="results-box user-results-grid">
+            <div class="empty-state">
+                <i class="fas fa-user"></i>
+                <p>Enter a username and fetch their list</p>
             </div>
         </div>
+    </div>
 
-        <div class="grid-preview card" style="grid-column: 1 / -1;">
-            <div class="grid-preview-header">
-                <div>
-                    <h2><i class="fas fa-th-large"></i> Shareable Ranking Grid</h2>
-                    <p class="grid-subtitle">Preview updates automatically as you edit your ranked list.</p>
-                </div>
-                <button id="downloadGridButton" class="btn-primary" disabled>
-                    <i class="fas fa-download"></i> Download PNG
-                </button>
+    <div class="rank-container card" style="grid-column: 1 / -1;">
+        <h2><i class="fas fa-trophy"></i> My Top Anime List</h2>
+        <p class="instruction">Drag and drop to reorder your ranking</p>
+        <div class="drag-hint">
+            <i class="fas fa-arrow-up-from-bracket"></i>
+            <p>Search or import items to start ranking</p>
+        </div>
+        <ul id="rankedList" class="ranked-list">
+            <!-- Ranked items will appear here -->
+        </ul>
+        <div class="list-actions">
+            <button id="saveListButton" class="btn-success">
+                <i class="fas fa-save"></i> Save List
+            </button>
+            <button id="exportListButton" class="btn-secondary">
+                <i class="fas fa-file-export"></i> Export List
+            </button>
+            <button id="clearListButton" class="btn-danger">
+                <i class="fas fa-trash-alt"></i> Clear List
+            </button>
+        </div>
+    </div>
+
+    <div class="grid-preview card" style="grid-column: 1 / -1;">
+        <div class="grid-preview-header">
+            <div>
+                <h2><i class="fas fa-th-large"></i> Shareable Ranking Grid</h2>
+                <p class="grid-subtitle">Preview updates automatically as you edit your ranked list.</p>
             </div>
-            <p class="grid-hint">
-                We pack your covers into the smallest square grid possible (e.g., 50 anime → 8×8). Empty slots stay
-                transparent in the download.
-            </p>
-            <div class="grid-preview-wrapper">
-                <div id="rankingGrid" class="ranking-grid">
-                    <div class="grid-empty-state">
-                        <i class="fas fa-image"></i>
-                        <p>Add anime to your ranked list to generate a grid preview.</p>
-                    </div>
+            <button id="downloadGridButton" class="btn-primary" disabled>
+                <i class="fas fa-download"></i> Download PNG
+            </button>
+        </div>
+        <p class="grid-hint">
+            We pack your covers into the smallest square grid possible (e.g., 50 anime → 8×8). Empty slots stay
+            transparent in the download.
+        </p>
+        <div class="grid-preview-wrapper">
+            <div id="rankingGrid" class="ranking-grid">
+                <div class="grid-empty-state">
+                    <i class="fas fa-image"></i>
+                    <p>Add anime to your ranked list to generate a grid preview.</p>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

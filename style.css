@@ -706,3 +706,182 @@ select:focus {
 ::-webkit-scrollbar-thumb:hover {
   background: #00b8e6;
 }
+
+/* ========================================
+   UI ENHANCEMENTS
+   ======================================== */
+
+/* Glassmorphism effect for cards */
+.card {
+  background: rgba(45, 45, 61, 0.7) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 32px !important;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Increased font sizes */
+.card h2 {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.5px;
+  margin-bottom: 20px !important;
+}
+
+/* Grid tile hover zoom */
+.grid-tile {
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+  cursor: pointer;
+}
+
+.grid-tile:hover {
+  transform: scale(1.08);
+  box-shadow: 
+    0 8px 24px rgba(0, 209, 255, 0.3),
+    inset 0 0 0 1px rgba(0, 209, 255, 0.2) !important;
+  z-index: 10;
+}
+
+/* Color-coded rank badges */
+.rank-number {
+  width: 36px !important;
+  height: 36px !important;
+  box-shadow: 0 4px 12px rgba(0, 209, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.rank-number.rank-gold {
+  background: linear-gradient(135deg, #FFD700, #FFA500) !important;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
+}
+
+.rank-number.rank-silver {
+  background: linear-gradient(135deg, #C0C0C0, #808080) !important;
+  box-shadow: 0 4px 12px rgba(192, 192, 192, 0.5);
+}
+
+.rank-number.rank-bronze {
+  background: linear-gradient(135deg, #CD7F32, #8B4513) !important;
+  box-shadow: 0 4px 12px rgba(205, 127, 50, 0.5);
+}
+
+/* Clear button for search input */
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  font-size: 1.2rem;
+}
+
+.search-input-wrapper:hover .clear-search-btn,
+.clear-search-btn.visible {
+  opacity: 1;
+}
+
+.clear-search-btn:hover {
+  color: var(--primary);
+  background: rgba(0, 209, 255, 0.1);
+}
+
+/* Loading skeleton */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-item {
+  padding: 16px;
+  margin: 8px;
+  border-radius: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+}
+
+.skeleton-image {
+  width: 50px;
+  height: 70px;
+  border-radius: 4px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 12px;
+}
+
+.skeleton-text {
+  height: 16px;
+  width: 200px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.skeleton-text-short {
+  height: 14px;
+  width: 120px;
+  margin-top: 8px;
+}
+
+/* Grid layout selector */
+.grid-layout-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.grid-layout-btn {
+  background: var(--light-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.grid-layout-btn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.grid-layout-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 209, 255, 0.3);
+}
+
