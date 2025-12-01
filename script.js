@@ -3,13 +3,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const searchButton = document.getElementById('searchButton');
     const searchResults = document.getElementById('searchResults');
+    const searchType = document.getElementById('searchType');
     const rankedList = document.getElementById('rankedList');
 
     const usernameInput = document.getElementById('usernameInput');
     const statusFilter = document.getElementById('statusFilter');
+    const importType = document.getElementById('importType');
     const fetchUserListButton = document.getElementById('fetchUserListButton');
     const userListResults = document.getElementById('userListResults');
-    
+
     // --- New UI Elements ---
     const darkModeToggle = document.getElementById('darkModeToggle');
     const filterControls = document.getElementById('filterControls');
@@ -50,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function initDarkMode() {
         const savedMode = localStorage.getItem('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
+
         // Default to system preference if no saved setting
         const initialMode = savedMode ? savedMode === 'dark' : prefersDark;
         applyDarkMode(initialMode);
@@ -60,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isDark = document.body.getAttribute('data-theme') === 'dark';
         applyDarkMode(!isDark);
     });
-    
+
     // ----------------------------------------------------------------------
     // ## AniList API Functions
     // ----------------------------------------------------------------------
@@ -68,15 +70,15 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Searches for anime on AniList
      */
-    async function searchAniList(query) {
+    async function searchAniList(query, type = 'ANIME') {
         if (!query) return;
 
         searchResults.innerHTML = '<p class="loading-message">Searching...</p>';
 
         const graphqlQuery = `
-            query ($search: String, $perPage: Int) {
+            query ($search: String, $perPage: Int, $type: MediaType) {
                 Page (perPage: $perPage) {
-                    media (search: $search, type: ANIME) {
+                    media (search: $search, type: $type, isAdult: false) {
                         id
                         title {
                             romaji
@@ -96,7 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const variables = {
             search: query,
-            perPage: 20
+            perPage: 20,
+            type: type
         };
 
         try {
@@ -113,8 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const ct = response.headers.get('content-type') || '';
                     detail = ct.includes('application/json') ? JSON.stringify(await response.json()) : await response.text();
-                } catch {}
-                throw new Error(`Network error: ${response.status} ${response.statusText}${detail ? ' - ' + detail.slice(0,200) : ''}`);
+                } catch { }
+                throw new Error(`Network error: ${response.status} ${response.statusText}${detail ? ' - ' + detail.slice(0, 200) : ''}`);
             }
             const data = await response.json();
 
@@ -142,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         media.forEach(anime => {
-            const itemEl = createResultItem(anime, null, anime.startDate.year);
+            const itemEl = createResultItem(anime, null, anime.startDate?.year, anime.format);
             itemEl.addEventListener('click', () => addAnimeToList(anime));
             searchResults.appendChild(itemEl);
         });
@@ -151,13 +154,13 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Fetches a specific user's anime list using MediaListCollection query.
      */
-    async function fetchUserList(username, status) {
+    async function fetchUserList(username, status, type = 'ANIME') {
         if (!username) {
             userListResults.innerHTML = '<p class="error-message">Please enter a username.</p>';
             return;
         }
 
-        userListResults.innerHTML = `<p class="loading-message">Fetching ${username}'s list...</p>`;
+        userListResults.innerHTML = `<p class="loading-message">Fetching ${username}'s ${type.toLowerCase()} list...</p>`;
         searchResults.innerHTML = '';
         filterControls.style.display = 'none';
 
@@ -167,8 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         `;
         const listQuery = `
-            query ($userId: Int) {
-              MediaListCollection(userId: $userId, type: ANIME) {
+            query ($userId: Int, $type: MediaType) {
+              MediaListCollection(userId: $userId, type: $type) {
                 lists {
                   entries {
                     media { id title { romaji english } coverImage { large } startDate { year } format }
@@ -193,8 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const ct = userRes.headers.get('content-type') || '';
                     detail = ct.includes('application/json') ? JSON.stringify(await userRes.json()) : await userRes.text();
-                } catch {}
-                throw new Error(`Network error: ${userRes.status} ${userRes.statusText}${detail ? ' - ' + detail.slice(0,200) : ''}`);
+                } catch { }
+                throw new Error(`Network error: ${userRes.status} ${userRes.statusText}${detail ? ' - ' + detail.slice(0, 200) : ''}`);
             }
             const userData = await userRes.json();
             const user = userData.data?.User;
@@ -208,15 +211,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 mode: 'cors',
                 cache: 'no-store',
                 headers: API_HEADERS,
-                body: JSON.stringify({ query: listQuery, variables: { userId: user.id } })
+                body: JSON.stringify({ query: listQuery, variables: { userId: user.id, type: type } })
             });
             if (!listRes.ok) {
                 let detail = '';
                 try {
                     const ct = listRes.headers.get('content-type') || '';
                     detail = ct.includes('application/json') ? JSON.stringify(await listRes.json()) : await listRes.text();
-                } catch {}
-                throw new Error(`Network error: ${listRes.status} ${listRes.statusText}${detail ? ' - ' + detail.slice(0,200) : ''}`);
+                } catch { }
+                throw new Error(`Network error: ${listRes.status} ${listRes.statusText}${detail ? ' - ' + detail.slice(0, 200) : ''}`);
             }
             const listData = await listRes.json();
 
@@ -224,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(listData.errors[0].message);
             }
             if (!listData.data?.MediaListCollection) {
-                userListResults.innerHTML = `<p class="error-message">No public anime list found for this user.</p>`;
+                userListResults.innerHTML = `<p class="error-message">No public ${type.toLowerCase()} list found for this user.</p>`;
                 return;
             }
 
@@ -267,17 +270,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Filter the entries
         let filteredEntries = [...currentUserEntries];
-        
+
         // Filter by format
         if (formatFilterValue !== 'ALL') {
-            filteredEntries = filteredEntries.filter(entry => 
+            filteredEntries = filteredEntries.filter(entry =>
                 entry.media.format === formatFilterValue
             );
         }
-        
+
         // Filter by minimum score
         if (minScore > 0) {
-            filteredEntries = filteredEntries.filter(entry => 
+            filteredEntries = filteredEntries.filter(entry =>
                 entry.score >= minScore
             );
         }
@@ -313,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (sortOrder === 'ASC') return valA.localeCompare(valB);
                     return valB.localeCompare(valA);
             }
-            
+
             // For numeric sorts (score, year)
             if (sortBy === 'TITLE_ROMAJI' || sortBy === 'FORMAT') {
                 if (sortOrder === 'ASC') return valA.localeCompare(valB);
@@ -328,8 +331,8 @@ document.addEventListener('DOMContentLoaded', () => {
         sortedEntries.forEach(entry => {
             const anime = entry.media;
             const itemEl = createResultItem(
-                anime, 
-                entry.score, 
+                anime,
+                entry.score,
                 entry.media.startDate.year,
                 entry.media.format
             );
@@ -346,9 +349,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function createResultItem(anime, score, year, format) {
         const item = document.createElement('div');
         item.classList.add('result-item');
-        
+
         const title = anime.title.romaji || anime.title.english || 'Untitled';
-        const cover = anime.coverImage.large || 'https://placehold.co/50x70/00d1ff/ffffff?text=N/A'; 
+        const cover = anime.coverImage.large || 'https://placehold.co/50x70/00d1ff/ffffff?text=N/A';
         const scoreDisplay = score ? `<span class="meta-pill score-pill">${score}/10</span>` : '';
         const yearDisplay = year ? `<span class="meta-pill year-pill">${year}</span>` : '';
         const formatDisplay = format ? `<span class="chip chip-format">${format}</span>` : '';
@@ -361,11 +364,11 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <button class="btn-primary add-btn"><i class="fas fa-plus"></i> Add</button>
         `;
-        
+
         // Replace the click listener logic
         item.querySelector('.add-btn').addEventListener('click', (e) => {
-             e.stopPropagation();
-             addAnimeToList(anime);
+            e.stopPropagation();
+            addAnimeToList(anime);
         });
         return item;
     }
@@ -481,8 +484,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const gridSize = Math.ceil(Math.sqrt(total));
-        const slots = gridSize * gridSize;
+        const gridSize = 5;
+        const rows = Math.ceil(total / gridSize);
+        const slots = rows * gridSize;
 
         rankingGrid.innerHTML = '';
         rankingGrid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
@@ -604,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalText = saveListButton.innerHTML;
         saveListButton.innerHTML = '<i class="fas fa-check"></i> Saved!';
         saveListButton.style.background = '#51cf66';
-        
+
         setTimeout(() => {
             saveListButton.innerHTML = originalText;
             saveListButton.style.background = '';
@@ -640,7 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalText = exportListButton.innerHTML;
         exportListButton.innerHTML = '<i class="fas fa-file-export"></i> Exported!';
         exportListButton.style.background = '#51cf66';
-        
+
         setTimeout(() => {
             exportListButton.innerHTML = originalText;
             exportListButton.style.background = '';
@@ -663,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function clearList() {
         if (rankedAnime.length === 0) return;
-        
+
         if (confirm('Are you sure you want to clear your entire list?')) {
             rankedAnime = [];
             renderRankedList();
@@ -696,27 +700,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleDrop(e) {
         e.stopPropagation();
         e.preventDefault();
-        
+
         if (draggedItem !== this) {
             // Get the IDs of the dragged item and the target item
             const draggedId = parseInt(draggedItem.dataset.id);
             const targetId = parseInt(this.dataset.id);
-            
+
             // Find indices in the array
             const draggedIndex = rankedAnime.findIndex(anime => anime.id === draggedId);
             const targetIndex = rankedAnime.findIndex(anime => anime.id === targetId);
-            
+
             // Reorder the array
             if (draggedIndex !== -1 && targetIndex !== -1) {
                 const [removed] = rankedAnime.splice(draggedIndex, 1);
                 rankedAnime.splice(targetIndex, 0, removed);
-                
+
                 // Re-render the list
                 renderRankedList();
                 saveList();
             }
         }
-        
+
         rankedList.classList.remove('drag-over');
         return false;
     }
@@ -762,17 +766,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------------------------------------
     // ## Initializers & Event Listeners
     // ----------------------------------------------------------------------
-    
+
     // --- Search Listeners ---
     searchButton.addEventListener('click', () => {
         const query = searchInput.value.trim();
-        if (query) { searchAniList(query); }
+        const type = searchType.value;
+        if (query) { searchAniList(query, type); }
     });
 
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             const query = searchInput.value.trim();
-            if (query) { searchAniList(query); }
+            const type = searchType.value;
+            if (query) { searchAniList(query, type); }
         }
     });
 
@@ -780,14 +786,16 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchUserListButton.addEventListener('click', () => {
         const username = usernameInput.value.trim();
         const status = statusFilter.value;
-        fetchUserList(username, status);
+        const type = importType.value;
+        fetchUserList(username, status, type);
     });
 
     usernameInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             const username = usernameInput.value.trim();
             const status = statusFilter.value;
-            fetchUserList(username, status);
+            const type = importType.value;
+            fetchUserList(username, status, type);
         }
     });
 
@@ -796,7 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
     orderFilter.addEventListener('change', renderUserListResults);
     formatFilter.addEventListener('change', renderUserListResults);
     scoreFilter.addEventListener('change', renderUserListResults);
-    
+
     statusFilter.addEventListener('change', () => {
         // Clear previous list state if status changes without fetching
         currentUserEntries = [];
