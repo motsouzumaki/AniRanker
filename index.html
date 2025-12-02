@@ -4,26 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AniRanker - Create Your Anime Rankings</title>
-    <link rel="stylesheet" href="style.css">
+    <title>AniRanker - System V.2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="manifest" href="manifest.webmanifest">
-    <meta name="theme-color" content="#00d1ff">
-    <meta name="application-name" content="AniRanker">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="https://placehold.co/192x192/00d1ff/ffffff?text=Ani">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'base-bg': '#17212b',
+                        'neon-blue': '#00dfff',
+                        'neon-pink': '#FF00FF',
+                        'neon-green': '#00FF00',
+                        'dark-panel': '#1e293b',
+                    },
+                    fontFamily: {
+                        'orbitron': ['"Orbitron"', 'sans-serif'],
+                        'mono': ['"JetBrains Mono"', 'monospace'],
+                    },
+                    boxShadow: {
+                        'neon': '0 0 5px #00dfff, 0 0 10px #00dfff',
+                        'neon-hover': '0 0 10px #00dfff, 0 0 20px #00dfff',
+                        'neon-pink': '0 0 5px #FF00FF, 0 0 10px #FF00FF',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 
-<body>
-    <div class="container">
-        <header class="app-header">
-            <h1><i class="fas fa-crown"></i> AniRanker</h1>
-            <button id="darkModeToggle" class="dark-mode-toggle">
-                <i class="fas fa-moon"></i> Dark Mode
+<body class="bg-base-bg text-white font-mono min-h-screen overflow-x-hidden relative">
+    <!-- Scanline Overlay -->
+    <div class="scanlines fixed inset-0 pointer-events-none z-50"></div>
+
+    <!-- Background Grid -->
+    <div class="bg-grid fixed inset-0 pointer-events-none z-0 opacity-10"></div>
+
+    <div class="container mx-auto p-4 relative z-10">
+        <header
+            class="mb-8 border-b-2 border-neon-blue pb-4 flex justify-between items-center bg-base-bg/80 backdrop-blur-sm sticky top-0 z-40">
+            <h1 class="text-4xl font-orbitron font-bold text-neon-blue drop-shadow-[0_0_5px_rgba(0,223,255,0.8)]">
+                <i class="fas fa-crown mr-2"></i>ANI_RANKER_SYS
+            </h1>
+            <button id="darkModeToggle"
+                class="border border-neon-blue text-neon-blue px-4 py-2 hover:bg-neon-blue hover:text-base-bg transition-all duration-300 font-bold uppercase tracking-wider text-sm shadow-neon">
+                <i class="fas fa-adjust"></i> VISUAL_MODE
             </button>
         </header>
 
+<<<<<<< Updated upstream
         <div class="search-container card">
             <h2><i class="fas fa-search"></i> Add from Search</h2>
             <div class="search-controls">
@@ -158,6 +191,192 @@
                     <div class="grid-empty-state">
                         <i class="fas fa-image"></i>
                         <p>Add anime to your ranked list to generate a grid preview.</p>
+=======
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Search Module -->
+            <div
+                class="lg:col-span-12 border border-neon-blue bg-base-bg/90 p-6 shadow-neon relative overflow-hidden group">
+                <div class="absolute top-0 left-0 w-2 h-2 bg-neon-blue"></div>
+                <div class="absolute top-0 right-0 w-2 h-2 bg-neon-blue"></div>
+                <div class="absolute bottom-0 left-0 w-2 h-2 bg-neon-blue"></div>
+                <div class="absolute bottom-0 right-0 w-2 h-2 bg-neon-blue"></div>
+
+                <h2 class="text-2xl font-orbitron text-neon-blue mb-4 border-b border-neon-blue/30 pb-2">
+                    <i class="fas fa-search mr-2"></i>DATA_INGESTION
+                </h2>
+                <div class="flex flex-col md:flex-row gap-4">
+                    <select id="searchType"
+                        class="bg-base-bg border border-neon-blue text-neon-blue p-3 focus:outline-none focus:shadow-neon font-mono uppercase">
+                        <option value="ANIME">Anime</option>
+                        <option value="MANGA">Manga</option>
+                    </select>
+                    <input type="text" id="searchInput" placeholder="INPUT_QUERY..."
+                        class="flex-1 bg-base-bg border border-neon-blue text-white p-3 focus:outline-none focus:shadow-neon placeholder-gray-600 font-mono">
+                    <button id="searchButton"
+                        class="bg-transparent border border-neon-blue text-neon-blue px-8 py-3 hover:bg-neon-blue hover:text-base-bg transition-all duration-300 font-bold uppercase tracking-wider shadow-neon">
+                        <i class="fas fa-search mr-2"></i>INIT_SEARCH
+                    </button>
+                </div>
+                <div id="searchResults"
+                    class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto custom-scrollbar">
+                    <div
+                        class="col-span-full text-center py-10 text-gray-500 font-mono border border-dashed border-gray-700">
+                        <i class="fas fa-terminal text-4xl mb-4 opacity-50"></i>
+                        <p>AWAITING_INPUT...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Module -->
+            <div class="lg:col-span-12 border border-neon-blue bg-base-bg/90 p-6 shadow-neon relative">
+                <div class="absolute top-0 left-0 w-2 h-2 bg-neon-blue"></div>
+                <div class="absolute top-0 right-0 w-2 h-2 bg-neon-blue"></div>
+                <div class="absolute bottom-0 left-0 w-2 h-2 bg-neon-blue"></div>
+                <div class="absolute bottom-0 right-0 w-2 h-2 bg-neon-blue"></div>
+
+                <h2 class="text-2xl font-orbitron text-neon-blue mb-4 border-b border-neon-blue/30 pb-2">
+                    <i class="fas fa-users mr-2"></i>EXTERNAL_DB_SYNC
+                </h2>
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <select id="importType"
+                        class="bg-base-bg border border-neon-blue text-neon-blue p-3 focus:outline-none focus:shadow-neon font-mono uppercase">
+                        <option value="ANIME">Anime</option>
+                        <option value="MANGA">Manga</option>
+                    </select>
+                    <input type="text" id="usernameInput" placeholder="USER_ID"
+                        class="flex-1 bg-base-bg border border-neon-blue text-white p-3 focus:outline-none focus:shadow-neon placeholder-gray-600 font-mono">
+                    <select id="statusFilter"
+                        class="bg-base-bg border border-neon-blue text-neon-blue p-3 focus:outline-none focus:shadow-neon font-mono uppercase">
+                        <option value="COMPLETED">Completed</option>
+                        <option value="CURRENT">Watching</option>
+                        <option value="PLANNING">Plan to Watch</option>
+                        <option value="REPEATING">Repeating</option>
+                        <option value="PAUSED">Paused</option>
+                        <option value="DROPPED">Dropped</option>
+                    </select>
+                    <button id="fetchUserListButton"
+                        class="bg-transparent border border-neon-pink text-neon-pink px-8 py-3 hover:bg-neon-pink hover:text-base-bg transition-all duration-300 font-bold uppercase tracking-wider shadow-neon-pink">
+                        <i class="fas fa-download mr-2"></i>SYNC_DATA
+                    </button>
+                </div>
+
+                <!-- Filters Panel -->
+                <div id="filterControls" class="border border-neon-blue/50 p-4 mb-4 bg-base-bg/50 hidden">
+                    <h3
+                        class="text-neon-blue font-orbitron text-sm mb-3 uppercase tracking-widest border-b border-neon-blue/30 inline-block">
+                        Filter_Parameters</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs text-neon-blue uppercase">Sort_Key</label>
+                            <select id="sortFilter"
+                                class="bg-base-bg border border-neon-blue/50 text-gray-300 p-2 text-sm focus:border-neon-blue focus:outline-none">
+                                <option value="TITLE_ROMAJI">Name</option>
+                                <option value="SCORE">Score</option>
+                                <option value="START_DATE">Year</option>
+                                <option value="FORMAT">Format</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs text-neon-blue uppercase">Sort_Order</label>
+                            <select id="orderFilter"
+                                class="bg-base-bg border border-neon-blue/50 text-gray-300 p-2 text-sm focus:border-neon-blue focus:outline-none">
+                                <option value="DESC">Descending</option>
+                                <option value="ASC">Ascending</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs text-neon-blue uppercase">Format_Type</label>
+                            <select id="formatFilter"
+                                class="bg-base-bg border border-neon-blue/50 text-gray-300 p-2 text-sm focus:border-neon-blue focus:outline-none">
+                                <option value="ALL">All Formats</option>
+                                <option value="TV">TV</option>
+                                <option value="MOVIE">Movie</option>
+                                <option value="OVA">OVA</option>
+                                <option value="ONA">ONA</option>
+                                <option value="SPECIAL">Special</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs text-neon-blue uppercase">Min_Score_Threshold</label>
+                            <select id="scoreFilter"
+                                class="bg-base-bg border border-neon-blue/50 text-gray-300 p-2 text-sm focus:border-neon-blue focus:outline-none">
+                                <option value="0">Any Score</option>
+                                <option value="6">6+</option>
+                                <option value="7">7+</option>
+                                <option value="8">8+</option>
+                                <option value="9">9+</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="userListResults"
+                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-h-[600px] overflow-y-auto custom-scrollbar p-2">
+                    <div
+                        class="col-span-full text-center py-10 text-gray-500 font-mono border border-dashed border-gray-700">
+                        <i class="fas fa-user-circle text-4xl mb-4 opacity-50"></i>
+                        <p>NO_USER_DATA_FOUND</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ranking Module -->
+            <div class="lg:col-span-12 border-2 border-neon-blue bg-base-bg/95 p-6 shadow-neon relative min-h-[500px]">
+                <div
+                    class="absolute -top-3 left-4 bg-base-bg px-2 text-neon-blue font-orbitron font-bold border-l border-r border-neon-blue">
+                    RANKING_MATRIX
+                </div>
+
+                <p
+                    class="text-center text-neon-blue/70 mb-4 font-mono text-sm border border-neon-blue/30 p-2 inline-block w-full">
+                    <i class="fas fa-info-circle mr-2"></i>DRAG_AND_DROP_TO_REORDER
+                </p>
+
+                <ul id="rankedList"
+                    class="space-y-2 min-h-[200px] p-4 border border-dashed border-neon-blue/30 bg-black/20">
+                    <!-- Ranked items will appear here -->
+                </ul>
+
+                <div class="flex flex-wrap justify-center gap-4 mt-6 pt-4 border-t border-neon-blue/30">
+                    <button id="saveListButton"
+                        class="bg-green-900/30 border border-green-500 text-green-400 px-6 py-2 hover:bg-green-500 hover:text-black transition-all duration-300 font-bold uppercase tracking-wider text-sm">
+                        <i class="fas fa-save mr-2"></i>SAVE_STATE
+                    </button>
+                    <button id="exportListButton"
+                        class="bg-blue-900/30 border border-blue-500 text-blue-400 px-6 py-2 hover:bg-blue-500 hover:text-black transition-all duration-300 font-bold uppercase tracking-wider text-sm">
+                        <i class="fas fa-file-export mr-2"></i>EXPORT_DATA
+                    </button>
+                    <button id="clearListButton"
+                        class="bg-red-900/30 border border-red-500 text-red-400 px-6 py-2 hover:bg-red-500 hover:text-black transition-all duration-300 font-bold uppercase tracking-wider text-sm">
+                        <i class="fas fa-trash-alt mr-2"></i>PURGE_ALL
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid Preview Module -->
+            <div class="lg:col-span-12 border border-neon-blue bg-base-bg/90 p-6 shadow-neon relative mb-10">
+                <div class="flex justify-between items-start mb-4 border-b border-neon-blue/30 pb-2">
+                    <div>
+                        <h2 class="text-xl font-orbitron text-neon-blue">
+                            <i class="fas fa-th-large mr-2"></i>VISUAL_OUTPUT_PREVIEW
+                        </h2>
+                        <p class="text-xs text-gray-400 font-mono mt-1">AUTO_GENERATED_GRID_LAYOUT</p>
+                    </div>
+                    <button id="downloadGridButton"
+                        class="bg-neon-blue text-base-bg px-4 py-2 hover:bg-white hover:text-base-bg transition-all duration-300 font-bold uppercase tracking-wider text-xs shadow-neon disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                        <i class="fas fa-download mr-2"></i>DOWNLOAD_PNG
+                    </button>
+                </div>
+
+                <div class="bg-black/40 p-4 border border-neon-blue/30 rounded-sm">
+                    <div id="rankingGrid"
+                        class="grid gap-2 grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 min-h-[200px]">
+                        <div class="col-span-full flex flex-col items-center justify-center text-gray-600 py-12">
+                            <i class="fas fa-image text-3xl mb-2"></i>
+                            <p class="font-mono text-sm">AWAITING_RANKED_DATA...</p>
+                        </div>
+>>>>>>> Stashed changes
                     </div>
                 </div>
             </div>
@@ -165,7 +384,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="script.js?v=8"></script>
+    <script src="script.js?v=9"></script>
 </body>
 
 </html>
