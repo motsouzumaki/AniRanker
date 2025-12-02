@@ -49,8 +49,6 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #00b8e6;
-<<<<<<< Updated upstream
-=======
 }
 
 /* Utility for text shadow if needed */
@@ -84,5 +82,4 @@
   opacity: 0.2;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)";
   filter: alpha(opacity=20);
->>>>>>> Stashed changes
 }
