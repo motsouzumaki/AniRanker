@@ -43,11 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ## Dark Mode Implementation (Simplified for new theme)
     // ----------------------------------------------------------------------
 
-    // The new design is inherently dark, so this toggle might just switch between "High Neon" and "Low Neon" or similar.
-    // For now, we'll keep the logic but it might not visually change much if we hardcoded the dark theme classes.
-    // However, let's make it toggle a 'light-mode' class on body if we wanted to support it, but the prompt asked for dark navy.
-    // We will leave this as a placeholder or "Visual Mode" toggle that maybe toggles the scanlines/grid.
-
     let visualModeHigh = true;
 
     function toggleVisualMode() {
@@ -58,13 +53,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (visualModeHigh) {
             if (scanlines) scanlines.style.display = 'block';
             if (grid) grid.style.opacity = '0.1';
-            darkModeToggle.innerHTML = '<i class="fas fa-eye"></i> VISUAL_MODE: ON';
+            darkModeToggle.innerHTML = '<i class="fas fa-eye"></i> <span class="hidden sm:inline">VISUAL_</span>MODE: ON';
             darkModeToggle.classList.add('text-neon-blue', 'border-neon-blue');
             darkModeToggle.classList.remove('text-gray-500', 'border-gray-500');
         } else {
             if (scanlines) scanlines.style.display = 'none';
             if (grid) grid.style.opacity = '0';
-            darkModeToggle.innerHTML = '<i class="fas fa-eye-slash"></i> VISUAL_MODE: OFF';
+            darkModeToggle.innerHTML = '<i class="fas fa-eye-slash"></i> <span class="hidden sm:inline">VISUAL_</span>MODE: OFF';
             darkModeToggle.classList.remove('text-neon-blue', 'border-neon-blue');
             darkModeToggle.classList.add('text-gray-500', 'border-gray-500');
         }
@@ -73,47 +68,108 @@ document.addEventListener('DOMContentLoaded', () => {
     if (darkModeToggle) {
         darkModeToggle.addEventListener('click', toggleVisualMode);
         // Initialize state
-        darkModeToggle.innerHTML = '<i class="fas fa-eye"></i> VISUAL_MODE: ON';
+        darkModeToggle.innerHTML = '<i class="fas fa-eye"></i> <span class="hidden sm:inline">VISUAL_</span>MODE: ON';
     }
 
     // ----------------------------------------------------------------------
     // ## AniList API Functions
     // ----------------------------------------------------------------------
 
+    // --- Character Filter Elements ---
+    const characterFilters = document.getElementById('characterFilters');
+    const filterMale = document.getElementById('filterMale');
+    const filterFemale = document.getElementById('filterFemale');
+
+    let currentRawResults = [];
+    let currentSearchType = 'ANIME';
+
+    // Toggle Character Filters & Listeners
+    if (searchType) {
+        searchType.addEventListener('change', () => {
+            currentSearchType = searchType.value;
+            if (currentSearchType === 'CHARACTER') {
+                characterFilters.classList.remove('hidden');
+            } else {
+                characterFilters.classList.add('hidden');
+            }
+        });
+    }
+
+    if (filterMale) filterMale.addEventListener('change', filterSearchResults);
+    if (filterFemale) filterFemale.addEventListener('change', filterSearchResults);
+
+    function filterSearchResults() {
+        if (currentSearchType !== 'CHARACTER') return;
+
+        const showMale = filterMale.checked;
+        const showFemale = filterFemale.checked;
+
+        const filtered = currentRawResults.filter(char => {
+            const g = (char.gender || 'Unknown').toLowerCase();
+            if (g === 'male' && !showMale) return false;
+            if (g === 'female' && !showFemale) return false;
+            return true;
+        });
+
+        displaySearchResults(filtered, 'CHARACTER');
+    }
+
     /**
-     * Searches for anime on AniList
+     * Searches for anime/manga/characters on AniList
      */
     async function searchAniList(query, type = 'ANIME') {
         if (!query) return;
 
+        currentSearchType = type;
         searchResults.innerHTML = '<div class="col-span-full text-center py-10 text-neon-blue animate-pulse font-mono"><i class="fas fa-circle-notch fa-spin mr-2"></i>SCANNING_DATABASE...</div>';
 
-        const graphqlQuery = `
-            query ($search: String, $perPage: Int, $type: MediaType) {
-                Page (perPage: $perPage) {
-                    media (search: $search, type: $type, isAdult: false) {
-                        id
-                        title {
-                            romaji
-                            english
+        let graphqlQuery;
+        let variables = {
+            search: query,
+            perPage: 50, // Increased for better client-side filtering
+        };
+
+        if (type === 'CHARACTER') {
+            graphqlQuery = `
+                query ($search: String, $perPage: Int) {
+                    Page (perPage: $perPage) {
+                        characters (search: $search) {
+                            id
+                            name {
+                                full
+                                native
+                            }
+                            image {
+                                large
+                            }
+                            gender
                         }
-                        coverImage {
-                            large
-                        }
-                        startDate {
-                            year
-                        }
-                        format
                     }
                 }
-            }
-        `;
-
-        const variables = {
-            search: query,
-            perPage: 20,
-            type: type
-        };
+            `;
+        } else {
+            graphqlQuery = `
+                query ($search: String, $perPage: Int, $type: MediaType) {
+                    Page (perPage: $perPage) {
+                        media (search: $search, type: $type, isAdult: false) {
+                            id
+                            title {
+                                romaji
+                                english
+                            }
+                            coverImage {
+                                large
+                            }
+                            startDate {
+                                year
+                            }
+                            format
+                        }
+                    }
+                }
+            `;
+            variables.type = type;
+        }
 
         try {
             const response = await fetch(ANILIST_API_URL, {
@@ -133,8 +189,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.errors[0].message);
             }
 
-            const media = data.data.Page.media;
-            displaySearchResults(media);
+            if (type === 'CHARACTER') {
+                currentRawResults = data.data.Page.characters;
+                filterSearchResults();
+            } else {
+                currentRawResults = data.data.Page.media;
+                displaySearchResults(currentRawResults, type);
+            }
+
         } catch (error) {
             console.error("Error searching AniList:", error);
             searchResults.innerHTML = `<div class="col-span-full text-center py-10 text-red-500 font-mono border border-red-500 bg-red-900/20"><i class="fas fa-exclamation-triangle mr-2"></i>ERROR: ${error.message}</div>`;
@@ -144,19 +206,82 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Displays search results
      */
-    function displaySearchResults(media) {
+    function displaySearchResults(results, type = 'ANIME') {
         searchResults.innerHTML = '';
 
-        if (media.length === 0) {
+        if (results.length === 0) {
             searchResults.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500 font-mono"><i class="fas fa-search mr-2"></i>NO_DATA_FOUND</div>';
             return;
         }
 
-        media.forEach(anime => {
-            const itemEl = createResultItem(anime, null, anime.startDate?.year, anime.format);
-            // itemEl is now a fully formed div with event listeners attached inside createResultItem
+        results.forEach(item => {
+            const itemEl = createResultItem(item, null, item.startDate?.year, item.format, type);
             searchResults.appendChild(itemEl);
         });
+    }
+
+    /**
+     * Helper function to create a result item DOM element, now including metadata.
+     */
+    function createResultItem(data, score, year, format, type = 'ANIME') {
+        const item = document.createElement('div');
+        item.className = 'bg-dark-panel border border-gray-700 hover:border-neon-blue hover:shadow-neon transition-all duration-300 p-2 sm:p-3 flex flex-col gap-2 group cursor-pointer relative overflow-hidden';
+
+        let title, cover, metaHtml = '';
+
+        if (type === 'CHARACTER') {
+            title = data.name.full || data.name.native || 'Unknown';
+            cover = data.image?.large || 'https://placehold.co/600x600/00d1ff/ffffff?text=Char';
+            const gender = data.gender || 'Unknown';
+            metaHtml += `<span class="text-[9px] sm:text-[10px] bg-purple-900/50 text-purple-400 border border-purple-500 px-1 sm:px-1.5 py-0.5 rounded-sm">${gender}</span>`;
+        } else {
+            title = data.title.romaji || data.title.english || 'Untitled';
+            cover = data.coverImage?.large || 'https://placehold.co/50x70/00d1ff/ffffff?text=N/A';
+            if (score) metaHtml += `<span class="text-[9px] sm:text-[10px] bg-green-900/50 text-green-400 border border-green-500 px-1 sm:px-1.5 py-0.5 rounded-sm mr-1">${score}/10</span>`;
+            if (year) metaHtml += `<span class="text-[9px] sm:text-[10px] bg-blue-900/50 text-blue-400 border border-blue-500 px-1 sm:px-1.5 py-0.5 rounded-sm mr-1">${year}</span>`;
+            if (format) metaHtml += `<span class="text-[9px] sm:text-[10px] bg-purple-900/50 text-purple-400 border border-purple-500 px-1 sm:px-1.5 py-0.5 rounded-sm">${format}</span>`;
+        }
+
+        const imgClass = type === 'CHARACTER' ? 'rounded-full border-2 border-neon-blue/50' : 'border border-gray-800';
+        const imgContainerClass = type === 'CHARACTER' ? 'rounded-full' : '';
+
+        item.innerHTML = `
+            <div class="relative w-full h-32 sm:h-40 overflow-hidden ${imgContainerClass} ${imgClass} group-hover:border-neon-blue/50 transition-colors flex justify-center items-center bg-black/20">
+                <img src="${cover}" alt="${title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-1 sm:pb-2">
+                    <button class="add-btn bg-neon-blue text-base-bg font-bold px-2 sm:px-4 py-1 text-[10px] sm:text-xs uppercase hover:bg-white transition-colors shadow-neon">
+                        <i class="fas fa-plus mr-1"></i> Add
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 min-w-0 text-center">
+                <h4 class="text-neon-blue font-bold text-xs sm:text-sm truncate font-orbitron" title="${title}">${title}</h4>
+                <div class="mt-1 flex flex-wrap gap-1 justify-center">
+                    ${metaHtml}
+                </div>
+            </div>
+        `;
+
+        // Normalize data for ranking
+        const rankData = {
+            id: data.id,
+            title: { romaji: title }, // Normalize title structure
+            coverImage: { large: cover }, // Normalize image structure
+            format: type === 'CHARACTER' ? 'CHARACTER' : (format || 'ANIME'),
+            startDate: { year: type === 'CHARACTER' ? '' : year }
+        };
+
+        const addBtn = item.querySelector('.add-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addAnimeToList(rankData);
+            });
+        }
+
+        item.addEventListener('click', () => addAnimeToList(rankData));
+
+        return item;
     }
 
     /**
@@ -340,54 +465,6 @@ document.addEventListener('DOMContentLoaded', () => {
         filterControls.style.display = 'block';
     }
 
-    /**
-     * Helper function to create a result item DOM element, now including metadata.
-     */
-    function createResultItem(anime, score, year, format) {
-        const item = document.createElement('div');
-        // Tailwind classes for result item
-        item.className = 'bg-dark-panel border border-gray-700 hover:border-neon-blue hover:shadow-neon transition-all duration-300 p-3 flex flex-col gap-2 group cursor-pointer relative overflow-hidden';
-
-        const title = anime.title.romaji || anime.title.english || 'Untitled';
-        const cover = anime.coverImage.large || 'https://placehold.co/50x70/00d1ff/ffffff?text=N/A';
-
-        let metaHtml = '';
-        if (score) metaHtml += `<span class="text-[10px] bg-green-900/50 text-green-400 border border-green-500 px-1.5 py-0.5 rounded-sm mr-1">${score}/10</span>`;
-        if (year) metaHtml += `<span class="text-[10px] bg-blue-900/50 text-blue-400 border border-blue-500 px-1.5 py-0.5 rounded-sm mr-1">${year}</span>`;
-        if (format) metaHtml += `<span class="text-[10px] bg-purple-900/50 text-purple-400 border border-purple-500 px-1.5 py-0.5 rounded-sm">${format}</span>`;
-
-        item.innerHTML = `
-            <div class="relative w-full h-40 overflow-hidden border border-gray-800 group-hover:border-neon-blue/50 transition-colors">
-                <img src="${cover}" alt="${title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-2">
-                    <button class="add-btn bg-neon-blue text-base-bg font-bold px-4 py-1 text-xs uppercase hover:bg-white transition-colors shadow-neon">
-                        <i class="fas fa-plus mr-1"></i> Add
-                    </button>
-                </div>
-            </div>
-            <div class="flex-1 min-w-0">
-                <h4 class="text-neon-blue font-bold text-sm truncate font-orbitron" title="${title}">${title}</h4>
-                <div class="mt-1 flex flex-wrap gap-1">
-                    ${metaHtml}
-                </div>
-            </div>
-        `;
-
-        // Add event listener to the button specifically
-        const addBtn = item.querySelector('.add-btn');
-        if (addBtn) {
-            addBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                addAnimeToList(anime);
-            });
-        }
-
-        // Also allow clicking the whole card
-        item.addEventListener('click', () => addAnimeToList(anime));
-
-        return item;
-    }
-
     // ----------------------------------------------------------------------
     // ## Ranked List Management
     // ----------------------------------------------------------------------
@@ -428,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rankedAnime.forEach((anime, index) => {
             const listItem = document.createElement('li');
             // Tailwind classes for ranked item
-            listItem.className = 'ranked-item bg-dark-panel border border-gray-700 p-3 flex items-center gap-4 hover:border-neon-blue transition-colors group relative';
+            listItem.className = 'ranked-item bg-dark-panel border border-gray-700 p-2 sm:p-3 flex items-center gap-2 sm:gap-4 hover:border-neon-blue transition-colors group relative text-xs sm:text-base';
             listItem.draggable = true;
             listItem.dataset.id = anime.id;
 
@@ -436,23 +513,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const cover = anime.coverImage.large || 'https://placehold.co/40x60/00d1ff/ffffff?text=N/A';
 
             listItem.innerHTML = `
-                <div class="w-8 h-8 flex items-center justify-center bg-neon-blue text-base-bg font-bold font-orbitron rounded-sm shadow-neon shrink-0">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-neon-blue text-base-bg font-bold font-orbitron rounded-sm shadow-neon shrink-0 text-xs sm:text-base">
                     ${index + 1}
                 </div>
-                <img src="${cover}" alt="${title}" class="w-10 h-14 object-cover border border-gray-600 shrink-0">
+                <img src="${cover}" alt="${title}" class="w-8 h-10 sm:w-10 sm:h-14 object-cover border border-gray-600 shrink-0">
                 <div class="flex-1 min-w-0">
-                    <div class="text-white font-bold text-sm truncate font-orbitron group-hover:text-neon-blue transition-colors">${title}</div>
-                    <div class="text-xs text-gray-400 font-mono">${anime.format || 'N/A'} // ${anime.startDate?.year || '????'}</div>
+                    <div class="text-white font-bold text-xs sm:text-sm truncate font-orbitron group-hover:text-neon-blue transition-colors">${title}</div>
+                    <div class="text-[10px] sm:text-xs text-gray-400 font-mono">${anime.format || 'N/A'} // ${anime.startDate?.year || '????'}</div>
                 </div>
-                <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button class="rank-btn rank-up w-8 h-8 flex items-center justify-center border border-gray-600 text-gray-400 hover:border-neon-blue hover:text-neon-blue hover:bg-neon-blue/10 transition-colors" aria-label="Move Up">
-                        <i class="fas fa-chevron-up"></i>
+                <div class="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="rank-btn rank-up w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center border border-gray-600 text-gray-400 hover:border-neon-blue hover:text-neon-blue hover:bg-neon-blue/10 transition-colors" aria-label="Move Up">
+                        <i class="fas fa-chevron-up text-xs sm:text-base"></i>
                     </button>
-                    <button class="rank-btn rank-down w-8 h-8 flex items-center justify-center border border-gray-600 text-gray-400 hover:border-neon-blue hover:text-neon-blue hover:bg-neon-blue/10 transition-colors" aria-label="Move Down">
-                        <i class="fas fa-chevron-down"></i>
+                    <button class="rank-btn rank-down w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center border border-gray-600 text-gray-400 hover:border-neon-blue hover:text-neon-blue hover:bg-neon-blue/10 transition-colors" aria-label="Move Down">
+                        <i class="fas fa-chevron-down text-xs sm:text-base"></i>
                     </button>
-                    <button class="remove-btn w-8 h-8 flex items-center justify-center border border-red-900 text-red-500 hover:bg-red-500 hover:text-white transition-colors" aria-label="Remove">
-                        <i class="fas fa-times"></i>
+                    <button class="remove-btn w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center border border-red-900 text-red-500 hover:bg-red-500 hover:text-white transition-colors" aria-label="Remove">
+                        <i class="fas fa-times text-xs sm:text-base"></i>
                     </button>
                 </div>
             `;
@@ -520,11 +597,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const gridSize = 5; // Fixed grid size for visual consistency
-        // Or dynamic: const gridSize = Math.ceil(Math.sqrt(total));
 
         rankingGrid.innerHTML = '';
-        // We are using Tailwind grid classes in HTML, but we can override inline for specific columns if needed
-        // For now, let's stick to the responsive classes in HTML (grid-cols-3 etc)
 
         rankedAnime.forEach((anime, index) => {
             const title = anime.title.romaji || anime.title.english || 'Untitled';
@@ -536,13 +610,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tile.innerHTML = `
                 <div class="w-full h-full bg-cover bg-center" style="background-image: url('${safeCover}')" role="img" aria-label="${title}"></div>
-                <div class="absolute top-1 left-1 bg-neon-blue text-base-bg text-[10px] font-bold px-1.5 py-0.5 shadow-sm font-orbitron">#${index + 1}</div>
+                <div class="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-neon-blue text-base-bg text-[8px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 shadow-sm font-orbitron">#${index + 1}</div>
             `;
             rankingGrid.appendChild(tile);
         });
-
-        // Fill empty slots if we want a perfect grid rectangle? 
-        // For now, just showing the items is fine.
 
         if (downloadGridButton) {
             downloadGridButton.disabled = false;
@@ -550,24 +621,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function ensureGridImagesLoaded() {
-        if (!rankingGrid) return;
-        // Select all divs with background images
-        const covers = rankingGrid.querySelectorAll('[role="img"]');
-        const tasks = Array.from(covers).map(el => {
-            const bg = getComputedStyle(el).backgroundImage || '';
-            const m = bg.match(/url\(["']?(.*?)["']?\)/);
-            const src = m && m[1] ? m[1] : null;
-            if (!src) return Promise.resolve();
-            return new Promise((resolve) => {
+    /**
+     * Converts an image URL to a base64 data URL to avoid CORS issues
+     */
+    async function convertImageToDataURL(url) {
+        return new Promise(async (resolve) => {
+            try {
+                // Try direct approach first (works locally)
                 const img = new Image();
                 img.crossOrigin = 'anonymous';
-                img.onload = () => resolve();
-                img.onerror = () => resolve();
-                img.src = src;
-            });
+
+                const directLoad = new Promise((resolveImg) => {
+                    img.onload = () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0);
+                            resolveImg(canvas.toDataURL('image/png'));
+                        } catch (e) {
+                            resolveImg(null);
+                        }
+                    };
+                    img.onerror = () => resolveImg(null);
+                    img.src = url;
+                });
+
+                const result = await Promise.race([
+                    directLoad,
+                    new Promise(r => setTimeout(() => r(null), 3000)) // 3s timeout
+                ]);
+
+                if (result) {
+                    resolve(result);
+                    return;
+                }
+
+                // If direct approach fails, use fetch with CORS proxy
+                const corsProxy = 'https://corsproxy.io/?';
+                const response = await fetch(corsProxy + encodeURIComponent(url));
+                const blob = await response.blob();
+
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = () => resolve(url); // Fallback
+                reader.readAsDataURL(blob);
+
+            } catch (e) {
+                console.warn('Failed to convert image:', url, e);
+                resolve(url); // Fallback to original
+            }
         });
-        await Promise.all(tasks);
     }
 
     async function downloadRankingGrid() {
@@ -582,23 +687,63 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadGridButton.innerHTML = '<i class="fas fa-cog fa-spin"></i> PROCESSING...';
 
         try {
-            await ensureGridImagesLoaded();
+            // Get all tiles with background images
+            const tiles = rankingGrid.querySelectorAll('[role="img"]');
+            const originalBackgrounds = [];
+
+            // Convert external images to base64 data URLs to avoid CORS issues
+            let processedCount = 0;
+            for (const tile of tiles) {
+                const bg = getComputedStyle(tile).backgroundImage;
+                const match = bg.match(/url\(["']?(.*?)["']?\)/);
+
+                if (match && match[1]) {
+                    processedCount++;
+                    downloadGridButton.innerHTML = `<i class="fas fa-cog fa-spin"></i> ${processedCount}/${tiles.length}...`;
+
+                    originalBackgrounds.push({
+                        tile,
+                        original: tile.style.backgroundImage || bg
+                    });
+
+                    // Convert to data URL
+                    const dataURL = await convertImageToDataURL(match[1]);
+                    tile.style.backgroundImage = `url("${dataURL}")`;
+                }
+            }
+
+            // Small delay to ensure styles are applied
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            downloadGridButton.innerHTML = '<i class="fas fa-cog fa-spin"></i> RENDERING...';
+
+            // Render with html2canvas (no CORS settings needed with data URLs)
             const canvas = await html2canvas(rankingGrid, {
                 backgroundColor: '#17212b', // Match base-bg
                 scale: 2,
-                useCORS: true,
-                allowTaint: false,
                 logging: false
+            });
+
+            // Restore original backgrounds
+            originalBackgrounds.forEach(({ tile, original }) => {
+                tile.style.backgroundImage = original;
             });
 
             const link = document.createElement('a');
             link.download = `ANI_RANKER_GRID_${new Date().toISOString().slice(0, 10)}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
+
+            // Success feedback
+            downloadGridButton.innerHTML = '<i class="fas fa-check"></i> <span class="hidden sm:inline">DOWNLOAD_</span>SUCCESS!';
+            setTimeout(() => {
+                downloadGridButton.innerHTML = originalLabel;
+                downloadGridButton.disabled = rankedAnime.length === 0;
+            }, 2000);
+
         } catch (error) {
             console.error('Error exporting grid:', error);
-            alert('EXPORT_FAILED');
-        } finally {
+            alert('EXPORT_FAILED: ' + error.message);
             downloadGridButton.innerHTML = originalLabel;
             downloadGridButton.disabled = rankedAnime.length === 0;
         }
@@ -715,8 +860,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleDragOver(e) {
         e.preventDefault();
-        // Add visual indicator
-        // this.classList.add('border-t-4', 'border-neon-blue');
         return false;
     }
 
@@ -756,8 +899,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const touchY = e.touches[0].clientY;
         const element = document.elementFromPoint(e.touches[0].clientX, touchY);
         const targetItem = element ? element.closest('.ranked-item') : null;
-
-        // Visual feedback could go here
     }
 
     function handleTouchEnd(e) {

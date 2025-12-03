@@ -1,85 +1,79 @@
-/* style.css */
-
-/* Scanline Effect */
+/* Custom Scanline Effect */
 .scanlines {
-  background: linear-gradient(to bottom,
-      rgba(255, 255, 255, 0),
-      rgba(255, 255, 255, 0) 50%,
-      rgba(0, 0, 0, 0.2) 50%,
-      rgba(0, 0, 0, 0.2));
-  background-size: 100% 4px;
-  animation: scanlines 1s linear infinite;
-  z-index: 9999;
-  pointer-events: none;
-}
-
-@keyframes scanlines {
-  0% {
-    background-position: 0 0;
-  }
-
-  100% {
-    background-position: 0 4px;
-  }
+    background: repeating-linear-gradient(0deg,
+            rgba(0, 0, 0, 0.15),
+            rgba(0, 0, 0, 0.15) 1px,
+            transparent 1px,
+            transparent 2px);
+    pointer-events: none;
 }
 
 /* Background Grid Pattern */
 .bg-grid {
-  background-image:
-    linear-gradient(rgba(0, 223, 255, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 223, 255, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
+    background-image:
+        linear-gradient(rgba(0, 223, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 223, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar Styling */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
+    width: 8px;
+    height: 8px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #17212b;
-  border-left: 1px solid #1e293b;
+    background: #17212b;
+    border: 1px solid rgba(0, 223, 255, 0.2);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #00dfff;
-  border-radius: 0;
-  box-shadow: 0 0 5px #00dfff;
+    background: linear-gradient(180deg, #00dfff 0%, #00a8cc 100%);
+    border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #00b8e6;
+    background: linear-gradient(180deg, #00ffea 0%, #00dfff 100%);
 }
 
-/* Utility for text shadow if needed */
-.text-glow {
-  text-shadow: 0 0 5px rgba(0, 223, 255, 0.8);
+/* Firefox Scrollbar */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #00dfff #17212b;
 }
 
-/* Ensure drag ghost image looks okay */
-.gu-mirror {
-  position: fixed !important;
-  margin: 0 !important;
-  z-index: 9999 !important;
-  opacity: 0.8;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=80)";
-  filter: alpha(opacity=80);
-  pointer-events: none;
+/* Drag Indicator for Ranked Items */
+.ranked-item.dragging {
+    opacity: 0.5;
+    border: 2px dashed #00dfff;
 }
 
-.gu-hide {
-  display: none !important;
+.ranked-item.drag-over {
+    border-top: 3px solid #00dfff;
 }
 
-.gu-unselectable {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
 
-.gu-transit {
-  opacity: 0.2;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)";
-  filter: alpha(opacity=20);
+    /* Ensure no horizontal overflow */
+    body {
+        overflow-x: hidden;
+    }
+
+    /* Adjust grid gaps for mobile */
+    .grid {
+        gap: 0.5rem;
+    }
+
+    /* Make sure buttons don't overflow */
+    button {
+        max-width: 100%;
+        word-wrap: break-word;
+    }
+
+    /* Adjust container padding */
+    .container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
 }

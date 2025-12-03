@@ -4,12 +4,14 @@ A high-tech, terminal-style interface for anime and manga ranking. This system a
 
 ## System Features
 
-- **Data Ingestion (Search)**: Query the AniList database for Anime and Manga entities.
+- **Data Ingestion (Search)**: Query the AniList database for Anime, Manga, and **Characters**.
+- **Character Mode**: Dedicated search with gender filtering (Male/Female) and distinct visual styling.
 - **External DB Sync (Import)**: Pull user lists (Completed, Watching, Planning, etc.) directly from AniList accounts.
 - **Ranking Matrix**: A drag-and-drop enabled interface to order your top entries.
-- **Visual Output**: Auto-generates a shareable 5-column grid image of your ranking.
+- **Visual Output**: Auto-generates a shareable grid image of your ranking.
 - **Visual Mode**: High-contrast "Cyberpunk" aesthetic with neon glows, scanlines, and CRT effects.
 - **Local Persistence**: State is saved automatically to local storage.
+- **Mobile Responsive**: Fully optimized for mobile devices with adaptive layouts and touch support.
 
 ## Tech Stack
 
@@ -31,7 +33,7 @@ A high-tech, terminal-style interface for anime and manga ranking. This system a
     Simply open `index.html` in any modern web browser. No build step required.
 
 3.  **Operations**:
-    - **Search**: Use the "DATA_INGESTION" module to find titles.
+    - **Search**: Use the "DATA_INGESTION" module to find titles or characters.
     - **Import**: Use "EXTERNAL_DB_SYNC" to load your AniList profile data.
     - **Rank**: Drag items in the "RANKING_MATRIX" to reorder.
     - **Export**: Click "DOWNLOAD_PNG" to save your grid.
@@ -46,6 +48,14 @@ AniRanker/
 ├── script.js           # System logic & API handling
 └── README.md           # System documentation
 ```
+
+## Mobile Support
+
+The application is fully responsive with:
+- Adaptive text sizes (smaller on mobile, larger on desktop)
+- Flexible button layouts that prevent horizontal overflow
+- Touch-enabled drag-and-drop for ranking
+- Optimized grid displays for various screen sizes
 
 ## License
 
