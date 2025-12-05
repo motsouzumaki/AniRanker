@@ -25,7 +25,7 @@ A high-tech, terminal-style interface for anime and manga ranking. This system a
 
 1.  **Clone the Repository**:
     ```bash
-    git clone https://github.com/yourusername/AniRanker.git
+    git clone https://github.com/motsouzumaki/AniRanker.git
     cd AniRanker
     ```
 
