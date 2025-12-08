@@ -33,6 +33,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const FALLBACK_SQUARE = 'https://placehold.co/600x600/00d1ff/ffffff?text=Ani';
 
+    /**
+     * Debounce function to limit how often a function is executed.
+     * @param {Function} func - The function to be debounced.
+     * @param {number} delay - The delay in milliseconds.
+     */
+    function debounce(func, delay) {
+        let timeoutId;
+        return function (...args) {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                func.apply(this, args);
+            }, delay);
+        };
+    }
+
     let rankedAnime = [];
     let draggedItem = null;
     let pointerDraggedItem = null;
@@ -928,6 +943,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // ## Initializers & Event Listeners
     // ----------------------------------------------------------------------
 
+    // Create debounced search function
+    const debouncedSearch = debounce(() => {
+        const query = searchInput.value.trim();
+        const type = searchType.value;
+        searchAniList(query, type);
+    }, 500);
+
+    // Real-time instant search on input
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.trim();
+            if (query.length > 2) {
+                debouncedSearch();
+            } else {
+                // Clear search results if query is too short
+                searchResults.innerHTML = '';
+            }
+        });
+    }
+
+    // Search button triggers immediate search (optional manual trigger)
     if (searchButton) {
         searchButton.addEventListener('click', () => {
             const query = searchInput.value.trim();
@@ -936,6 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Enter key also triggers immediate search
     if (searchInput) {
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
