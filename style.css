@@ -262,7 +262,7 @@
 .layout-grid {
     display: grid !important;
     /* Better card size for readability */
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)) !important;
     gap: 12px !important;
     padding: 12px;
 }
