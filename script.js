@@ -717,9 +717,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
-    // Touch Helpers: Long Press Logic
+    // Touch Helpers: Long Press Logic with Live Reordering (No Ghost)
     let longPressTimer = null;
     let isTouchDragging = false;
+    let activeItem = null;
     const LONG_PRESS_DURATION = 400; // ms
 
     function resetTouchState() {
@@ -728,6 +729,12 @@ document.addEventListener('DOMContentLoaded', () => {
             longPressTimer = null;
         }
         isTouchDragging = false;
+
+        // Restore placeholder
+        if (activeItem) {
+            activeItem.classList.remove('drag-placeholder');
+            activeItem = null;
+        }
     }
 
     function handleTouchStart(e) {
@@ -741,9 +748,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Start Timer
         longPressTimer = setTimeout(() => {
             isTouchDragging = true;
-            // Native Visuals Only
-            touchItem.classList.add('dragging');
+            activeItem = touchItem;
+
+            // Haptic feedback
             if (navigator.vibrate) navigator.vibrate(50);
+
+            // Style original as placeholder (gray)
+            touchItem.classList.add('drag-placeholder');
         }, LONG_PRESS_DURATION);
     }
 
@@ -755,36 +766,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Lock scroll while dragging
         if (e.cancelable) e.preventDefault();
+
+        const touch = e.touches[0];
+
+        // Live Reordering: Find what's under the finger
+        const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetItem = elementUnder ? elementUnder.closest('.ranked-item') : null;
+
+        if (targetItem && targetItem !== activeItem && !targetItem.classList.contains('drag-placeholder')) {
+            // Determine if we should insert before or after
+            const targetRect = targetItem.getBoundingClientRect();
+            const targetMiddle = targetRect.top + targetRect.height / 2;
+
+            if (touch.clientY < targetMiddle) {
+                // Insert before
+                targetItem.parentNode.insertBefore(activeItem, targetItem);
+            } else {
+                // Insert after
+                targetItem.parentNode.insertBefore(activeItem, targetItem.nextSibling);
+            }
+        }
     }
 
     function handleTouchEnd(e) {
         const wasDragging = isTouchDragging;
 
-        // Always clear state first
-        resetTouchState();
+        // Capture final order before cleanup
+        if (wasDragging && activeItem) {
+            // Update rankedAnime array to match new DOM order
+            const items = rankedList.querySelectorAll('.ranked-item');
+            const newOrder = [];
+            items.forEach(item => {
+                const id = parseInt(item.dataset.id);
+                const anime = rankedAnime.find(a => a.id === id);
+                if (anime) newOrder.push(anime);
+            });
+            rankedAnime = newOrder;
+            saveList();
+        }
 
-        // Remove visuals
-        this.classList.remove('dragging');
+        // Always clear state
+        resetTouchState();
 
         if (!wasDragging) return;
 
-        // Drop Logic
-        const touch = e.changedTouches[0];
-        const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        const targetItem = element ? element.closest('.ranked-item') : null;
-
-        if (targetItem && targetItem !== this) {
-            const draggedId = parseInt(this.dataset.id);
-            const targetId = parseInt(targetItem.dataset.id);
-            const draggedIndex = rankedAnime.findIndex(a => a.id === draggedId);
-            const targetIndex = rankedAnime.findIndex(a => a.id === targetId);
-            if (draggedIndex !== -1 && targetIndex !== -1) {
-                const [removed] = rankedAnime.splice(draggedIndex, 1);
-                rankedAnime.splice(targetIndex, 0, removed);
-                renderRankedList();
-                saveList();
-            }
-        }
+        // Re-render to clean up and apply final state
+        renderRankedList();
     }
 
     // Listeners

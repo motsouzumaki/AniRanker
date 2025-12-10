@@ -128,4 +128,20 @@
     touch-action: none;
 }
 
-/* CSS for the temporary floating clone REMOVED */
+
+/* Mobile Drag Avatar & Placeholder */
+.drag-avatar {
+    position: fixed;
+    pointer-events: none; /* Critical: allows touch to pass through to the list below */
+    z-index: 10000;
+    opacity: 0.9;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    transform: scale(1.05) rotate(2deg); /* Slight pop and tilt */
+    transition: none; /* No lag when following finger */
+}
+
+.drag-placeholder {
+    opacity: 0.3;
+    border: 2px dashed #94a3b8 !important;
+    filter: grayscale(100%);
+}
