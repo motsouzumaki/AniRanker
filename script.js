@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchUserListButton = document.getElementById('fetchUserListButton');
     const userListResults = document.getElementById('userListResults');
 
-    // --- New UI Elements ---
+    // --- UI Elements ---
     const darkModeToggle = document.getElementById('darkModeToggle');
     const filterControls = document.getElementById('filterControls');
     const sortFilter = document.getElementById('sortFilter');
@@ -31,12 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     };
-    const FALLBACK_SQUARE = 'https://placehold.co/600x600/00d1ff/ffffff?text=Ani';
+    const FALLBACK_SQUARE = 'https://placehold.co/600x600/e2e8f0/64748b?text=Ani';
 
     /**
      * Debounce function to limit how often a function is executed.
-     * @param {Function} func - The function to be debounced.
-     * @param {number} delay - The delay in milliseconds.
      */
     function debounce(func, delay) {
         let timeoutId;
@@ -50,47 +48,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let rankedAnime = [];
     let draggedItem = null;
-    let pointerDraggedItem = null;
-    let pointerDragging = false;
-    let currentUserEntries = []; // Stores the raw fetched entries for local filtering
+    let currentUserEntries = [];
 
     // ----------------------------------------------------------------------
-    // ## Dark Mode Implementation (Simplified for new theme)
+    // ## Dark Mode Implementation (Clean Theme)
     // ----------------------------------------------------------------------
 
-    let visualModeHigh = true;
+    let isDarkMode;
 
-    function toggleVisualMode() {
-        visualModeHigh = !visualModeHigh;
-        const scanlines = document.querySelector('.scanlines');
-        const grid = document.querySelector('.bg-grid');
+    // Check for saved user preference, if any, on load
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        isDarkMode = true;
+        document.documentElement.classList.add('dark');
+    } else {
+        isDarkMode = false;
+        document.documentElement.classList.remove('dark');
+    }
 
-        if (visualModeHigh) {
-            if (scanlines) scanlines.style.display = 'block';
-            if (grid) grid.style.opacity = '0.1';
-            darkModeToggle.innerHTML = '<i class="fas fa-eye"></i> <span class="hidden sm:inline">VISUAL_</span>MODE: ON';
-            darkModeToggle.classList.add('text-neon-blue', 'border-neon-blue');
-            darkModeToggle.classList.remove('text-gray-500', 'border-gray-500');
+    // Initialize button state based on initial isDarkMode
+    if (darkModeToggle) {
+        if (isDarkMode) {
+            darkModeToggle.innerHTML = '<i class="fas fa-sun text-amber-400"></i> <span>Light Mode</span>';
+            darkModeToggle.classList.replace('bg-slate-100', 'bg-slate-700');
+            darkModeToggle.classList.replace('text-slate-600', 'text-slate-200');
         } else {
-            if (scanlines) scanlines.style.display = 'none';
-            if (grid) grid.style.opacity = '0';
-            darkModeToggle.innerHTML = '<i class="fas fa-eye-slash"></i> <span class="hidden sm:inline">VISUAL_</span>MODE: OFF';
-            darkModeToggle.classList.remove('text-neon-blue', 'border-neon-blue');
-            darkModeToggle.classList.add('text-gray-500', 'border-gray-500');
+            darkModeToggle.innerHTML = '<i class="fas fa-moon text-primary"></i> <span>Dark Mode</span>';
+            darkModeToggle.classList.replace('bg-slate-700', 'bg-slate-100');
+            darkModeToggle.classList.replace('text-slate-200', 'text-slate-600');
+        }
+    }
+
+    function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        const html = document.documentElement;
+
+        if (isDarkMode) {
+            html.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            if (darkModeToggle) {
+                darkModeToggle.innerHTML = '<i class="fas fa-sun text-amber-400"></i> <span>Light Mode</span>';
+                darkModeToggle.classList.replace('bg-slate-100', 'bg-slate-700');
+                darkModeToggle.classList.replace('text-slate-600', 'text-slate-200');
+            }
+        } else {
+            html.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            if (darkModeToggle) {
+                darkModeToggle.innerHTML = '<i class="fas fa-moon text-primary"></i> <span>Dark Mode</span>';
+                darkModeToggle.classList.replace('bg-slate-700', 'bg-slate-100');
+                darkModeToggle.classList.replace('text-slate-200', 'text-slate-600');
+            }
         }
     }
 
     if (darkModeToggle) {
-        darkModeToggle.addEventListener('click', toggleVisualMode);
-        // Initialize state
-        darkModeToggle.innerHTML = '<i class="fas fa-eye"></i> <span class="hidden sm:inline">VISUAL_</span>MODE: ON';
+        darkModeToggle.addEventListener('click', toggleDarkMode);
     }
 
     // ----------------------------------------------------------------------
     // ## AniList API Functions
     // ----------------------------------------------------------------------
 
-    // --- Character Filter Elements ---
     const characterFilters = document.getElementById('characterFilters');
     const filterMale = document.getElementById('filterMale');
     const filterFemale = document.getElementById('filterFemale');
@@ -98,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentRawResults = [];
     let currentSearchType = 'ANIME';
 
-    // Toggle Character Filters & Listeners
     if (searchType) {
         searchType.addEventListener('change', () => {
             currentSearchType = searchType.value;
@@ -115,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function filterSearchResults() {
         if (currentSearchType !== 'CHARACTER') return;
-
         const showMale = filterMale.checked;
         const showFemale = filterFemale.checked;
 
@@ -129,20 +145,14 @@ document.addEventListener('DOMContentLoaded', () => {
         displaySearchResults(filtered, 'CHARACTER');
     }
 
-    /**
-     * Searches for anime/manga/characters on AniList
-     */
     async function searchAniList(query, type = 'ANIME') {
         if (!query) return;
 
         currentSearchType = type;
-        searchResults.innerHTML = '<div class="col-span-full text-center py-10 text-neon-blue animate-pulse font-mono"><i class="fas fa-circle-notch fa-spin mr-2"></i>SCANNING_DATABASE...</div>';
+        searchResults.innerHTML = '<div class="col-span-full text-center py-10 text-primary font-medium animate-pulse"><i class="fas fa-circle-notch fa-spin mr-2"></i>Searching database...</div>';
 
         let graphqlQuery;
-        let variables = {
-            search: query,
-            perPage: 50, // Increased for better client-side filtering
-        };
+        let variables = { search: query, perPage: 50 };
 
         if (type === 'CHARACTER') {
             graphqlQuery = `
@@ -150,13 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     Page (perPage: $perPage) {
                         characters (search: $search) {
                             id
-                            name {
-                                full
-                                native
-                            }
-                            image {
-                                large
-                            }
+                            name { full native }
+                            image { large }
                             gender
                         }
                     }
@@ -168,16 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     Page (perPage: $perPage) {
                         media (search: $search, type: $type, isAdult: false) {
                             id
-                            title {
-                                romaji
-                                english
-                            }
-                            coverImage {
-                                large
-                            }
-                            startDate {
-                                year
-                            }
+                            title { romaji english }
+                            coverImage { large }
+                            startDate { year }
                             format
                         }
                     }
@@ -189,20 +187,13 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(ANILIST_API_URL, {
                 method: 'POST',
-                mode: 'cors',
-                cache: 'no-store',
                 headers: API_HEADERS,
                 body: JSON.stringify({ query: graphqlQuery, variables: variables })
             });
 
-            if (!response.ok) {
-                throw new Error(`Network error: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`Network error: ${response.status}`);
             const data = await response.json();
-
-            if (data.errors) {
-                throw new Error(data.errors[0].message);
-            }
+            if (data.errors) throw new Error(data.errors[0].message);
 
             if (type === 'CHARACTER') {
                 currentRawResults = data.data.Page.characters;
@@ -214,18 +205,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("Error searching AniList:", error);
-            searchResults.innerHTML = `<div class="col-span-full text-center py-10 text-red-500 font-mono border border-red-500 bg-red-900/20"><i class="fas fa-exclamation-triangle mr-2"></i>ERROR: ${error.message}</div>`;
+            searchResults.innerHTML = `<div class="col-span-full text-center py-10 text-rose-500 bg-rose-50 rounded-lg text-sm"><i class="fas fa-exclamation-triangle mr-2"></i>Error: ${error.message}</div>`;
         }
     }
 
-    /**
-     * Displays search results
-     */
     function displaySearchResults(results, type = 'ANIME') {
         searchResults.innerHTML = '';
 
         if (results.length === 0) {
-            searchResults.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500 font-mono"><i class="fas fa-search mr-2"></i>NO_DATA_FOUND</div>';
+            searchResults.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 text-sm">No results found</div>';
             return;
         }
 
@@ -236,52 +224,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Helper function to create a result item DOM element, now including metadata.
+     * Updated Card Design (Modern/Clean)
      */
     function createResultItem(data, score, year, format, type = 'ANIME') {
         const item = document.createElement('div');
-        item.className = 'bg-dark-panel border border-gray-700 hover:border-neon-blue hover:shadow-neon transition-all duration-300 p-2 sm:p-3 flex flex-col gap-2 group cursor-pointer relative overflow-hidden';
+        // New clean card classes with Dark Mode support
+        item.className = 'bg-white dark:bg-slate-700 rounded-xl overflow-hidden shadow-sm hover:shadow-hover border border-slate-100 dark:border-slate-600 transition-all duration-200 cursor-pointer group flex flex-col h-full';
 
         let title, cover, metaHtml = '';
 
         if (type === 'CHARACTER') {
             title = data.name.full || data.name.native || 'Unknown';
-            cover = data.image?.large || 'https://placehold.co/600x600/00d1ff/ffffff?text=Char';
-            const gender = data.gender || 'Unknown';
-            metaHtml += `<span class="text-[9px] sm:text-[10px] bg-purple-900/50 text-purple-400 border border-purple-500 px-1 sm:px-1.5 py-0.5 rounded-sm">${gender}</span>`;
+            cover = data.image?.large || FALLBACK_SQUARE;
+            const gender = data.gender || '?';
+            metaHtml += `<span class="text-[9px] bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 border border-purple-100 dark:border-purple-700 px-1.5 py-0.5 rounded mr-1">${gender}</span>`;
         } else {
             title = data.title.romaji || data.title.english || 'Untitled';
-            cover = data.coverImage?.large || 'https://placehold.co/50x70/00d1ff/ffffff?text=N/A';
-            if (score) metaHtml += `<span class="text-[9px] sm:text-[10px] bg-green-900/50 text-green-400 border border-green-500 px-1 sm:px-1.5 py-0.5 rounded-sm mr-1">${score}/10</span>`;
-            if (year) metaHtml += `<span class="text-[9px] sm:text-[10px] bg-blue-900/50 text-blue-400 border border-blue-500 px-1 sm:px-1.5 py-0.5 rounded-sm mr-1">${year}</span>`;
-            if (format) metaHtml += `<span class="text-[9px] sm:text-[10px] bg-purple-900/50 text-purple-400 border border-purple-500 px-1 sm:px-1.5 py-0.5 rounded-sm">${format}</span>`;
+            cover = data.coverImage?.large || FALLBACK_SQUARE;
+            if (score) metaHtml += `<span class="text-[9px] bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800 px-1.5 py-0.5 rounded mr-1">${score}</span>`;
+            if (year) metaHtml += `<span class="text-[9px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-1.5 py-0.5 rounded mr-1">${year}</span>`;
+            if (format) metaHtml += `<span class="text-[9px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800 px-1.5 py-0.5 rounded">${format}</span>`;
         }
 
-        const imgClass = type === 'CHARACTER' ? 'rounded-full border-2 border-neon-blue/50' : 'border border-gray-800';
-        const imgContainerClass = type === 'CHARACTER' ? 'rounded-full' : '';
-
         item.innerHTML = `
-            <div class="relative w-full h-32 sm:h-40 overflow-hidden ${imgContainerClass} ${imgClass} group-hover:border-neon-blue/50 transition-colors flex justify-center items-center bg-black/20">
-                <img src="${cover}" alt="${title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-1 sm:pb-2">
-                    <button class="add-btn bg-neon-blue text-base-bg font-bold px-2 sm:px-4 py-1 text-[10px] sm:text-xs uppercase hover:bg-white transition-colors shadow-neon">
-                        <i class="fas fa-plus mr-1"></i> Add
+            <div class="relative aspect-[2/3] overflow-hidden bg-slate-100 dark:bg-slate-800">
+                <img src="${cover}" alt="${title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
+                    <button class="add-btn bg-white text-primary font-bold px-3 py-1 text-xs rounded-full shadow-lg hover:bg-primary hover:text-white transition-colors">
+                        Add
                     </button>
                 </div>
             </div>
-            <div class="flex-1 min-w-0 text-center">
-                <h4 class="text-neon-blue font-bold text-xs sm:text-sm truncate font-orbitron" title="${title}">${title}</h4>
-                <div class="mt-1 flex flex-wrap gap-1 justify-center">
+            <div class="p-2.5 flex flex-col flex-1">
+                <h4 class="text-slate-800 dark:text-slate-200 font-bold text-xs leading-tight line-clamp-2 mb-1.5" title="${title}">${title}</h4>
+                <div class="mt-auto flex flex-wrap gap-1">
                     ${metaHtml}
                 </div>
             </div>
         `;
 
-        // Normalize data for ranking
         const rankData = {
             id: data.id,
-            title: { romaji: title }, // Normalize title structure
-            coverImage: { large: cover }, // Normalize image structure
+            title: { romaji: title },
+            coverImage: { large: cover },
             format: type === 'CHARACTER' ? 'CHARACTER' : (format || 'ANIME'),
             startDate: { year: type === 'CHARACTER' ? '' : year }
         };
@@ -295,28 +280,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         item.addEventListener('click', () => addAnimeToList(rankData));
-
         return item;
     }
 
-    /**
-     * Fetches a specific user's anime list using MediaListCollection query.
-     */
     async function fetchUserList(username, status, type = 'ANIME') {
-        if (!username) {
-            userListResults.innerHTML = '<div class="col-span-full text-center text-red-400 font-mono">INPUT_USER_ID_REQUIRED</div>';
-            return;
-        }
+        if (!username) return;
 
-        userListResults.innerHTML = `<div class="col-span-full text-center py-10 text-neon-pink animate-pulse font-mono"><i class="fas fa-satellite-dish fa-spin mr-2"></i>SYNCING_WITH_USER_DB...</div>`;
-        searchResults.innerHTML = ''; // Clear search results to reduce clutter
+        userListResults.innerHTML = `<div class="col-span-full text-center py-10 text-primary animate-pulse"><i class="fas fa-sync fa-spin mr-2"></i>Syncing...</div>`;
+        searchResults.innerHTML = '';
         filterControls.classList.add('hidden');
 
-        const userQuery = `
-            query ($name: String) {
-              User(name: $name) { id name }
-            }
-        `;
+        const userQuery = `query ($name: String) { User(name: $name) { id name } }`;
         const listQuery = `
             query ($userId: Int, $type: MediaType) {
               MediaListCollection(userId: $userId, type: $type) {
@@ -334,145 +308,83 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const userRes = await fetch(ANILIST_API_URL, {
                 method: 'POST',
-                mode: 'cors',
-                cache: 'no-store',
                 headers: API_HEADERS,
                 body: JSON.stringify({ query: userQuery, variables: { name: username } })
             });
-            if (!userRes.ok) throw new Error(`Network error: ${userRes.status}`);
-
             const userData = await userRes.json();
             const user = userData.data?.User;
+
             if (!user) {
-                userListResults.innerHTML = `<div class="col-span-full text-center py-10 text-red-500 font-mono border border-red-500 bg-red-900/20">USER_NOT_FOUND</div>`;
+                userListResults.innerHTML = `<div class="col-span-full text-center py-10 text-rose-500">User not found</div>`;
                 return;
             }
 
             const listRes = await fetch(ANILIST_API_URL, {
                 method: 'POST',
-                mode: 'cors',
-                cache: 'no-store',
                 headers: API_HEADERS,
                 body: JSON.stringify({ query: listQuery, variables: { userId: user.id, type: type } })
             });
-            if (!listRes.ok) throw new Error(`Network error: ${listRes.status}`);
-
             const listData = await listRes.json();
 
-            if (listData.errors) {
-                throw new Error(listData.errors[0].message);
-            }
             if (!listData.data?.MediaListCollection) {
-                userListResults.innerHTML = `<div class="col-span-full text-center py-10 text-yellow-500 font-mono">NO_PUBLIC_LIST_FOUND</div>`;
+                userListResults.innerHTML = `<div class="col-span-full text-center py-10 text-amber-500">No public lists found</div>`;
                 return;
             }
 
             const allLists = listData.data.MediaListCollection.lists;
             const allEntries = allLists.flatMap(list => list.entries);
-            const initialFilteredEntries = allEntries.filter(entry => entry.status === status);
-
-            currentUserEntries = initialFilteredEntries;
+            currentUserEntries = allEntries.filter(entry => entry.status === status);
             renderUserListResults();
 
         } catch (error) {
-            console.error('Error fetching user list:', error);
-            userListResults.innerHTML = `<div class="col-span-full text-center py-10 text-red-500 font-mono border border-red-500 bg-red-900/20">SYSTEM_ERROR: ${error.message}</div>`;
-            filterControls.classList.add('hidden');
+            userListResults.innerHTML = `<div class="col-span-full text-center py-10 text-rose-500">Error: ${error.message}</div>`;
         }
     }
 
-    // ----------------------------------------------------------------------
-    // ## Filtering and Display Logic (User List)
-    // ----------------------------------------------------------------------
-
-    /**
-     * Applies current sort/order settings to currentUserEntries and displays them.
-     */
     function renderUserListResults() {
-        userListResults.innerHTML = ''; // Clear results
+        userListResults.innerHTML = '';
 
         if (currentUserEntries.length === 0) {
-            const currentStatus = statusFilter.value;
-            userListResults.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500 font-mono">NO_ENTRIES_FOUND_FOR_STATUS: ${currentStatus}</div>`;
+            userListResults.innerHTML = `<div class="col-span-full text-center py-10 text-slate-400">No entries found for this status</div>`;
             filterControls.classList.add('hidden');
             return;
         }
 
-        // 1. Get current filter/sort settings
         const sortBy = sortFilter.value;
         const sortOrder = orderFilter.value;
         const formatFilterValue = formatFilter.value;
         const minScore = parseInt(scoreFilter.value);
 
-        // 2. Filter the entries
-        let filteredEntries = [...currentUserEntries];
-
-        // Filter by format
-        if (formatFilterValue !== 'ALL') {
-            filteredEntries = filteredEntries.filter(entry =>
-                entry.media.format === formatFilterValue
-            );
-        }
-
-        // Filter by minimum score
-        if (minScore > 0) {
-            filteredEntries = filteredEntries.filter(entry =>
-                entry.score >= minScore
-            );
-        }
+        let filteredEntries = currentUserEntries.filter(entry => {
+            if (formatFilterValue !== 'ALL' && entry.media.format !== formatFilterValue) return false;
+            if (minScore > 0 && entry.score < minScore) return false;
+            return true;
+        });
 
         if (filteredEntries.length === 0) {
-            userListResults.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500 font-mono">NO_MATCHES_FOR_FILTER_CRITERIA</div>';
+            userListResults.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400">No matches for filters</div>';
             filterControls.classList.remove('hidden');
-            filterControls.style.display = 'block'; // Ensure it's visible
+            filterControls.style.display = 'block';
             return;
         }
 
-        // 3. Sort the filtered entries
         const sortedEntries = filteredEntries.sort((a, b) => {
             let valA, valB;
-
             switch (sortBy) {
-                case 'SCORE':
-                    valA = a.score || 0;
-                    valB = b.score || 0;
-                    break;
-                case 'START_DATE':
-                    valA = a.media.startDate.year || 0;
-                    valB = b.media.startDate.year || 0;
-                    break;
-                case 'FORMAT':
-                    valA = a.media.format || '';
-                    valB = b.media.format || '';
-                    break;
-                case 'TITLE_ROMAJI':
-                default:
-                    valA = a.media.title.romaji || a.media.title.english || '';
-                    valB = b.media.title.romaji || b.media.title.english || '';
-                    if (valA === valB) return 0;
-                    if (sortOrder === 'ASC') return valA.localeCompare(valB);
-                    return valB.localeCompare(valA);
+                case 'SCORE': valA = a.score || 0; valB = b.score || 0; break;
+                case 'START_DATE': valA = a.media.startDate.year || 0; valB = b.media.startDate.year || 0; break;
+                case 'FORMAT': valA = a.media.format || ''; valB = b.media.format || ''; break;
+                case 'TITLE_ROMAJI': default:
+                    valA = a.media.title.romaji || ''; valB = b.media.title.romaji || '';
             }
-
-            // For numeric sorts (score, year)
-            if (sortBy === 'TITLE_ROMAJI' || sortBy === 'FORMAT') {
-                if (sortOrder === 'ASC') return valA.localeCompare(valB);
-                return valB.localeCompare(valA);
-            } else {
-                if (sortOrder === 'ASC') return valA - valB;
-                return valB - valA;
+            if (typeof valA === 'string') {
+                return sortOrder === 'ASC' ? valA.localeCompare(valB) : valB.localeCompare(valA);
             }
+            return sortOrder === 'ASC' ? valA - valB : valB - valA;
         });
 
-        // 4. Display the sorted and filtered results
         sortedEntries.forEach(entry => {
-            const anime = entry.media;
-            const itemEl = createResultItem(
-                anime,
-                entry.score,
-                entry.media.startDate.year,
-                entry.media.format
-            );
+            const itemEl = createResultItem(entry.media, entry.score, entry.media.startDate.year, entry.media.format);
             userListResults.appendChild(itemEl);
         });
 
@@ -481,36 +393,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------------------------------------------------
-    // ## Ranked List Management
+    // ## Ranked List Logic (Updated UI)
     // ----------------------------------------------------------------------
 
-    /**
-     * Adds an anime to the ranked list
-     */
     function addAnimeToList(anime) {
-        // Check if anime is already in the list
         if (rankedAnime.some(item => item.id === anime.id)) {
-            // Shake animation or toast could go here
-            alert('ALREADY_IN_DATABASE');
+            alert('Item already in list');
             return;
         }
-
         rankedAnime.push(anime);
         renderRankedList();
         saveList();
     }
 
-    /**
-     * Renders the ranked list
-     */
     function renderRankedList() {
         rankedList.innerHTML = '';
 
         if (rankedAnime.length === 0) {
             rankedList.innerHTML = `
-                <div class="text-center py-8 text-gray-500 font-mono border border-dashed border-gray-700 bg-black/20">
-                    <i class="fas fa-inbox text-2xl mb-2 opacity-50"></i>
-                    <p>RANKING_MATRIX_EMPTY</p>
+                <div class="text-center py-12 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-900/50">
+                    <i class="fas fa-ghost text-3xl mb-2 opacity-30"></i>
+                    <p class="text-sm">Your ranking is empty</p>
                 </div>
             `;
             renderRankingGrid();
@@ -519,42 +422,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
         rankedAnime.forEach((anime, index) => {
             const listItem = document.createElement('li');
-            // Tailwind classes for ranked item
-            listItem.className = 'ranked-item bg-dark-panel border border-gray-700 p-2 sm:p-3 flex items-center gap-2 sm:gap-4 hover:border-neon-blue transition-colors group relative text-xs sm:text-base';
+            listItem.className = 'ranked-item bg-white dark:bg-slate-700 p-2 rounded-lg flex items-center gap-3 border border-slate-100 dark:border-slate-600 shadow-sm transition-all group select-none cursor-move';
             listItem.draggable = true;
             listItem.dataset.id = anime.id;
 
-            const title = anime.title.romaji || anime.title.english || 'Untitled';
-            const cover = anime.coverImage.large || 'https://placehold.co/40x60/00d1ff/ffffff?text=N/A';
+            const title = anime.title.romaji || 'Untitled';
+            const cover = anime.coverImage.large || FALLBACK_SQUARE;
 
             listItem.innerHTML = `
-                <div class="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-neon-blue text-base-bg font-bold font-orbitron rounded-sm shadow-neon shrink-0 text-xs sm:text-base">
+                <div class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 font-bold rounded text-xs shrink-0 cursor-grab">
                     ${index + 1}
                 </div>
-                <img src="${cover}" alt="${title}" class="w-8 h-10 sm:w-10 sm:h-14 object-cover border border-gray-600 shrink-0">
+                <img src="${cover}" alt="${title}" class="w-8 h-8 rounded-md object-cover shrink-0">
                 <div class="flex-1 min-w-0">
-                    <div class="text-white font-bold text-xs sm:text-sm truncate font-orbitron group-hover:text-neon-blue transition-colors">${title}</div>
-                    <div class="text-[10px] sm:text-xs text-gray-400 font-mono">${anime.format || 'N/A'} // ${anime.startDate?.year || '????'}</div>
+                    <div class="text-slate-700 dark:text-slate-200 font-medium text-sm truncate leading-tight">${title}</div>
+                    <div class="text-[10px] text-slate-400">${anime.format || 'N/A'} • ${anime.startDate?.year || '????'}</div>
                 </div>
-                <div class="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button class="rank-btn rank-up w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center border border-gray-600 text-gray-400 hover:border-neon-blue hover:text-neon-blue hover:bg-neon-blue/10 transition-colors" aria-label="Move Up">
-                        <i class="fas fa-chevron-up text-xs sm:text-base"></i>
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="rank-btn rank-up w-6 h-6 flex items-center justify-center rounded bg-slate-50 dark:bg-slate-800 hover:bg-primary hover:text-white text-slate-400 transition-colors">
+                        <i class="fas fa-chevron-up text-[10px]"></i>
                     </button>
-                    <button class="rank-btn rank-down w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center border border-gray-600 text-gray-400 hover:border-neon-blue hover:text-neon-blue hover:bg-neon-blue/10 transition-colors" aria-label="Move Down">
-                        <i class="fas fa-chevron-down text-xs sm:text-base"></i>
+                    <button class="rank-btn rank-down w-6 h-6 flex items-center justify-center rounded bg-slate-50 dark:bg-slate-800 hover:bg-primary hover:text-white text-slate-400 transition-colors">
+                        <i class="fas fa-chevron-down text-[10px]"></i>
                     </button>
-                    <button class="remove-btn w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center border border-red-900 text-red-500 hover:bg-red-500 hover:text-white transition-colors" aria-label="Remove">
-                        <i class="fas fa-times text-xs sm:text-base"></i>
+                    <button class="remove-btn w-6 h-6 flex items-center justify-center rounded bg-rose-50 dark:bg-rose-900/20 text-rose-400 hover:bg-rose-500 hover:text-white transition-colors ml-1">
+                        <i class="fas fa-times text-[10px]"></i>
                     </button>
                 </div>
             `;
 
+            // Drag Events
             listItem.addEventListener('dragstart', handleDragStart);
             listItem.addEventListener('dragend', handleDragEnd);
             listItem.addEventListener('dragover', handleDragOver);
             listItem.addEventListener('drop', handleDrop);
 
-            // Touch support
+            // Touch Events
             listItem.addEventListener('touchstart', handleTouchStart, { passive: false });
             listItem.addEventListener('touchmove', handleTouchMove, { passive: false });
             listItem.addEventListener('touchend', handleTouchEnd);
@@ -562,29 +465,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const upBtn = listItem.querySelector('.rank-up');
             const downBtn = listItem.querySelector('.rank-down');
 
-            // Disable buttons logic
-            if (index === 0) {
-                upBtn.classList.add('opacity-30', 'cursor-not-allowed');
-                upBtn.disabled = true;
-            }
-            if (index === rankedAnime.length - 1) {
-                downBtn.classList.add('opacity-30', 'cursor-not-allowed');
-                downBtn.disabled = true;
-            }
+            if (index === 0) upBtn.disabled = true;
+            if (index === rankedAnime.length - 1) downBtn.disabled = true;
 
-            upBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                moveAnime(anime.id, -1);
-            });
-            downBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                moveAnime(anime.id, 1);
-            });
-
-            listItem.querySelector('.remove-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                removeAnimeFromList(anime.id);
-            });
+            upBtn.addEventListener('click', (e) => { e.stopPropagation(); moveAnime(anime.id, -1); });
+            downBtn.addEventListener('click', (e) => { e.stopPropagation(); moveAnime(anime.id, 1); });
+            listItem.querySelector('.remove-btn').addEventListener('click', (e) => { e.stopPropagation(); removeAnimeFromList(anime.id); });
 
             rankedList.appendChild(listItem);
         });
@@ -595,172 +481,129 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderRankingGrid() {
         if (!rankingGrid) return;
 
-        const total = rankedAnime.length;
-
-        if (total === 0) {
+        if (rankedAnime.length === 0) {
             rankingGrid.innerHTML = `
-                <div class="col-span-full flex flex-col items-center justify-center text-gray-600 py-12 border border-dashed border-gray-800">
-                    <i class="fas fa-image text-3xl mb-2 opacity-50"></i>
-                    <p class="font-mono text-sm">AWAITING_RANKED_DATA...</p>
+                <div class="col-span-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-600 py-12">
+                    <i class="fas fa-photo-video text-2xl mb-2 opacity-50"></i>
+                    <p class="text-xs">Grid view</p>
                 </div>
             `;
-            if (downloadGridButton) {
-                downloadGridButton.disabled = true;
-                downloadGridButton.classList.add('opacity-50', 'cursor-not-allowed');
-            }
+            if (downloadGridButton) downloadGridButton.disabled = true;
             return;
         }
-
-        const gridSize = 5; // Fixed grid size for visual consistency
 
         rankingGrid.innerHTML = '';
 
         rankedAnime.forEach((anime, index) => {
-            const title = anime.title.romaji || anime.title.english || 'Untitled';
-            const cover = anime.coverImage?.extraLarge || anime.coverImage?.large || FALLBACK_SQUARE;
+            const title = anime.title.romaji || 'Untitled';
+            const cover = anime.coverImage?.large || FALLBACK_SQUARE;
             const safeCover = cover.replace(/"/g, '\\"');
 
             const tile = document.createElement('div');
-            tile.className = 'relative aspect-square bg-gray-800 border border-gray-700 overflow-hidden group';
+            tile.className = 'relative aspect-[3/4] bg-slate-200 dark:bg-slate-800 overflow-hidden group shadow-sm';
 
             tile.innerHTML = `
-                <div class="w-full h-full bg-cover bg-center" style="background-image: url('${safeCover}')" role="img" aria-label="${title}"></div>
-                <div class="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-neon-blue text-base-bg text-[8px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 shadow-sm font-orbitron">#${index + 1}</div>
+                <div class="w-full h-full bg-cover bg-center" style="background-image: url('${safeCover}')" role="img"></div>
+                <div class="absolute top-1 left-1 bg-white/90 dark:bg-black/60 text-slate-800 dark:text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
+                    ${index + 1}
+                </div>
             `;
             rankingGrid.appendChild(tile);
         });
 
-        if (downloadGridButton) {
-            downloadGridButton.disabled = false;
-            downloadGridButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
+        if (downloadGridButton) downloadGridButton.disabled = false;
     }
 
-    /**
-     * Converts an image URL to a base64 data URL to avoid CORS issues
-     */
+    // --- Helpers (Image Conversion, Move, Save, etc) --- 
+
     async function convertImageToDataURL(url) {
         return new Promise(async (resolve) => {
             try {
-                // Try direct approach first (works locally)
+                // Try direct load first
                 const img = new Image();
                 img.crossOrigin = 'anonymous';
 
                 const directLoad = new Promise((resolveImg) => {
                     img.onload = () => {
-                        try {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = img.width;
-                            canvas.height = img.height;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0);
-                            resolveImg(canvas.toDataURL('image/png'));
-                        } catch (e) {
-                            resolveImg(null);
-                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        try { resolveImg(canvas.toDataURL('image/png')); } catch (e) { resolveImg(null); }
                     };
                     img.onerror = () => resolveImg(null);
                     img.src = url;
                 });
 
-                const result = await Promise.race([
-                    directLoad,
-                    new Promise(r => setTimeout(() => r(null), 3000)) // 3s timeout
-                ]);
+                const result = await Promise.race([directLoad, new Promise(r => setTimeout(() => r(null), 3000))]);
+                if (result) { resolve(result); return; }
 
-                if (result) {
-                    resolve(result);
-                    return;
-                }
-
-                // If direct approach fails, use fetch with CORS proxy
+                // Fallback to proxy
                 const corsProxy = 'https://corsproxy.io/?';
                 const response = await fetch(corsProxy + encodeURIComponent(url));
                 const blob = await response.blob();
-
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
-                reader.onerror = () => resolve(url); // Fallback
+                reader.onerror = () => resolve(url);
                 reader.readAsDataURL(blob);
 
             } catch (e) {
-                console.warn('Failed to convert image:', url, e);
-                resolve(url); // Fallback to original
+                console.warn('Image convert failed', e);
+                resolve(url);
             }
         });
     }
 
     async function downloadRankingGrid() {
         if (!rankingGrid || rankedAnime.length === 0) return;
-        if (typeof html2canvas !== 'function') {
-            alert('MODULE_MISSING: html2canvas');
-            return;
-        }
 
         const originalLabel = downloadGridButton.innerHTML;
         downloadGridButton.disabled = true;
-        downloadGridButton.innerHTML = '<i class="fas fa-cog fa-spin"></i> PROCESSING...';
+        downloadGridButton.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing...';
 
         try {
-            // Get all tiles with background images
             const tiles = rankingGrid.querySelectorAll('[role="img"]');
             const originalBackgrounds = [];
 
-            // Convert external images to base64 data URLs to avoid CORS issues
-            let processedCount = 0;
+            // Convert images for canvas
             for (const tile of tiles) {
                 const bg = getComputedStyle(tile).backgroundImage;
                 const match = bg.match(/url\(["']?(.*?)["']?\)/);
-
                 if (match && match[1]) {
-                    processedCount++;
-                    downloadGridButton.innerHTML = `<i class="fas fa-cog fa-spin"></i> ${processedCount}/${tiles.length}...`;
-
-                    originalBackgrounds.push({
-                        tile,
-                        original: tile.style.backgroundImage || bg
-                    });
-
-                    // Convert to data URL
+                    originalBackgrounds.push({ tile, original: tile.style.backgroundImage || bg });
                     const dataURL = await convertImageToDataURL(match[1]);
-                    tile.style.backgroundImage = `url("${dataURL}")`;
+                    if (dataURL) tile.style.backgroundImage = `url("${dataURL}")`;
                 }
             }
 
-            // Small delay to ensure styles are applied
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(r => setTimeout(r, 200));
 
-            downloadGridButton.innerHTML = '<i class="fas fa-cog fa-spin"></i> RENDERING...';
-
-            // Render with html2canvas (no CORS settings needed with data URLs)
             const canvas = await html2canvas(rankingGrid, {
-                backgroundColor: '#17212b', // Match base-bg
+                backgroundColor: isDarkMode ? '#1e293b' : '#ffffff', // Match theme
                 scale: 2,
                 logging: false
             });
 
-            // Restore original backgrounds
-            originalBackgrounds.forEach(({ tile, original }) => {
-                tile.style.backgroundImage = original;
-            });
+            // Restore
+            originalBackgrounds.forEach(({ tile, original }) => tile.style.backgroundImage = original);
 
             const link = document.createElement('a');
-            link.download = `ANI_RANKER_GRID_${new Date().toISOString().slice(0, 10)}.png`;
+            link.download = `RANKER_${new Date().toISOString().slice(0, 10)}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
 
-            // Success feedback
-            downloadGridButton.innerHTML = '<i class="fas fa-check"></i> <span class="hidden sm:inline">DOWNLOAD_</span>SUCCESS!';
+            downloadGridButton.innerHTML = '<i class="fas fa-check"></i> Success';
             setTimeout(() => {
                 downloadGridButton.innerHTML = originalLabel;
-                downloadGridButton.disabled = rankedAnime.length === 0;
+                downloadGridButton.disabled = false;
             }, 2000);
 
         } catch (error) {
-            console.error('Error exporting grid:', error);
-            alert('EXPORT_FAILED: ' + error.message);
+            console.error('Export error', error);
+            alert('Export failed');
             downloadGridButton.innerHTML = originalLabel;
-            downloadGridButton.disabled = rankedAnime.length === 0;
+            downloadGridButton.disabled = false;
         }
     }
 
@@ -769,9 +612,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (i === -1) return;
         const j = i + delta;
         if (j < 0 || j >= rankedAnime.length) return;
-        const tmp = rankedAnime[i];
-        rankedAnime[i] = rankedAnime[j];
-        rankedAnime[j] = tmp;
+
+        [rankedAnime[i], rankedAnime[j]] = [rankedAnime[j], rankedAnime[i]];
         renderRankedList();
         saveList();
     }
@@ -784,111 +626,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveList() {
         localStorage.setItem('rankedAnime', JSON.stringify(rankedAnime));
-
         const originalText = saveListButton.innerHTML;
-        const originalBg = saveListButton.className;
-
-        saveListButton.innerHTML = '<i class="fas fa-check"></i> SAVED';
-        saveListButton.classList.remove('bg-green-900/30', 'text-green-400');
-        saveListButton.classList.add('bg-green-500', 'text-black');
+        saveListButton.innerHTML = '<i class="fas fa-check"></i> Saved';
+        saveListButton.classList.remove('bg-emerald-50', 'text-emerald-600', 'border-emerald-200', 'dark:bg-emerald-900/20');
+        saveListButton.classList.add('bg-emerald-500', 'text-white', 'border-emerald-500');
 
         setTimeout(() => {
             saveListButton.innerHTML = originalText;
-            saveListButton.classList.remove('bg-green-500', 'text-black');
-            saveListButton.classList.add('bg-green-900/30', 'text-green-400');
-        }, 2000);
+            saveListButton.classList.add('bg-emerald-50', 'text-emerald-600', 'border-emerald-200', 'dark:bg-emerald-900/20');
+            saveListButton.classList.remove('bg-emerald-500', 'text-white', 'border-emerald-500');
+        }, 1000);
     }
 
     function exportList() {
-        if (rankedAnime.length === 0) {
-            alert('DATABASE_EMPTY');
-            return;
-        }
-
-        let content = 'ANI_RANKER_EXPORT\n=================\n\n';
+        if (rankedAnime.length === 0) return;
+        let content = 'RANKING EXPORT\n==============\n\n';
         rankedAnime.forEach((anime, index) => {
-            const title = anime.title.romaji || anime.title.english || 'Untitled';
-            content += `${index + 1}. ${title} [${anime.startDate?.year || '????'}]\n`;
+            content += `${index + 1}. ${anime.title.romaji || 'Untitled'}\n`;
         });
-
         const blob = new Blob([content], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'ani_ranker_export.txt';
+        a.download = 'ranking.txt';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        const originalText = exportListButton.innerHTML;
-        exportListButton.innerHTML = '<i class="fas fa-check"></i> EXPORTED';
-        exportListButton.classList.remove('bg-blue-900/30', 'text-blue-400');
-        exportListButton.classList.add('bg-blue-500', 'text-black');
-
-        setTimeout(() => {
-            exportListButton.innerHTML = originalText;
-            exportListButton.classList.remove('bg-blue-500', 'text-black');
-            exportListButton.classList.add('bg-blue-900/30', 'text-blue-400');
-        }, 2000);
     }
 
     function loadList() {
-        const savedList = localStorage.getItem('rankedAnime');
-        if (savedList) {
-            try {
-                rankedAnime = JSON.parse(savedList);
-                renderRankedList();
-            } catch (e) {
-                console.error("Corrupt save data", e);
-            }
+        const saved = localStorage.getItem('rankedAnime');
+        if (saved) {
+            try { rankedAnime = JSON.parse(saved); renderRankedList(); } catch (e) { }
         }
     }
 
     function clearList() {
         if (rankedAnime.length === 0) return;
-
-        if (confirm('CONFIRM_PURGE: Are you sure you want to delete all data?')) {
+        if (confirm('Clear all data?')) {
             rankedAnime = [];
             renderRankedList();
             saveList();
         }
     }
 
-    // ----------------------------------------------------------------------
-    // ## Drag and Drop Functionality
-    // ----------------------------------------------------------------------
-
+    // Drag Helpers
     function handleDragStart(e) {
         draggedItem = this;
-        this.classList.add('opacity-50', 'border-neon-blue', 'border-dashed');
+        this.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/html', this.innerHTML);
     }
-
     function handleDragEnd(e) {
-        this.classList.remove('opacity-50', 'border-neon-blue', 'border-dashed');
-        rankedList.querySelectorAll('.ranked-item').forEach(item => {
-            item.classList.remove('border-t-4', 'border-neon-blue');
-        });
+        this.classList.remove('dragging');
+        rankedList.querySelectorAll('.ranked-item').forEach(item => item.classList.remove('drag-over'));
     }
-
     function handleDragOver(e) {
         e.preventDefault();
+        this.classList.add('drag-over');
         return false;
     }
-
     function handleDrop(e) {
-        e.stopPropagation();
-        e.preventDefault();
-
+        e.stopPropagation(); e.preventDefault();
+        this.classList.remove('drag-over');
         if (draggedItem !== this) {
             const draggedId = parseInt(draggedItem.dataset.id);
             const targetId = parseInt(this.dataset.id);
-
-            const draggedIndex = rankedAnime.findIndex(anime => anime.id === draggedId);
-            const targetIndex = rankedAnime.findIndex(anime => anime.id === targetId);
-
+            const draggedIndex = rankedAnime.findIndex(a => a.id === draggedId);
+            const targetIndex = rankedAnime.findIndex(a => a.id === targetId);
             if (draggedIndex !== -1 && targetIndex !== -1) {
                 const [removed] = rankedAnime.splice(draggedIndex, 1);
                 rankedAnime.splice(targetIndex, 0, removed);
@@ -899,36 +703,28 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
-    // Touch support helpers
-    let touchDragItem = null;
+    // Touch Helpers
     let touchStartY = 0;
-
     function handleTouchStart(e) {
-        touchDragItem = this;
         touchStartY = e.touches[0].clientY;
         this.classList.add('opacity-50');
     }
-
     function handleTouchMove(e) {
-        e.preventDefault(); // Prevent scrolling while dragging
-        const touchY = e.touches[0].clientY;
-        const element = document.elementFromPoint(e.touches[0].clientX, touchY);
-        const targetItem = element ? element.closest('.ranked-item') : null;
+        // Prevent scrolling if we are actively dragging an item
+        if (this.classList.contains('opacity-50')) {
+            e.preventDefault();
+        }
     }
-
     function handleTouchEnd(e) {
         this.classList.remove('opacity-50');
         const touchY = e.changedTouches[0].clientY;
         const element = document.elementFromPoint(e.changedTouches[0].clientX, touchY);
         const targetItem = element ? element.closest('.ranked-item') : null;
-
         if (targetItem && targetItem !== this) {
             const draggedId = parseInt(this.dataset.id);
             const targetId = parseInt(targetItem.dataset.id);
-
-            const draggedIndex = rankedAnime.findIndex(anime => anime.id === draggedId);
-            const targetIndex = rankedAnime.findIndex(anime => anime.id === targetId);
-
+            const draggedIndex = rankedAnime.findIndex(a => a.id === draggedId);
+            const targetIndex = rankedAnime.findIndex(a => a.id === targetId);
             if (draggedIndex !== -1 && targetIndex !== -1) {
                 const [removed] = rankedAnime.splice(draggedIndex, 1);
                 rankedAnime.splice(targetIndex, 0, removed);
@@ -938,72 +734,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
-    // ----------------------------------------------------------------------
-    // ## Initializers & Event Listeners
-    // ----------------------------------------------------------------------
-
-    // Create debounced search function
+    // Listeners
+    // Use debounced search for input
     const debouncedSearch = debounce(() => {
-        const query = searchInput.value.trim();
-        const type = searchType.value;
-        searchAniList(query, type);
+        searchAniList(searchInput.value.trim(), searchType.value);
     }, 500);
 
-    // Real-time instant search on input
     if (searchInput) {
         searchInput.addEventListener('input', () => {
-            const query = searchInput.value.trim();
-            if (query.length > 2) {
-                debouncedSearch();
-            } else {
-                // Clear search results if query is too short
-                searchResults.innerHTML = '';
-            }
+            if (searchInput.value.trim().length > 2) debouncedSearch();
         });
-    }
-
-    // Search button triggers immediate search (optional manual trigger)
-    if (searchButton) {
-        searchButton.addEventListener('click', () => {
-            const query = searchInput.value.trim();
-            const type = searchType.value;
-            if (query) { searchAniList(query, type); }
-        });
-    }
-
-    // Enter key also triggers immediate search
-    if (searchInput) {
         searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const query = searchInput.value.trim();
-                const type = searchType.value;
-                if (query) { searchAniList(query, type); }
-            }
+            if (e.key === 'Enter') searchAniList(searchInput.value.trim(), searchType.value);
         });
     }
 
-    if (fetchUserListButton) {
-        fetchUserListButton.addEventListener('click', () => {
-            const username = usernameInput.value.trim();
-            const status = statusFilter.value;
-            const type = importType.value;
-            fetchUserList(username, status, type);
-        });
-    }
+    if (searchButton) searchButton.addEventListener('click', () => searchAniList(searchInput.value.trim(), searchType.value));
+    if (fetchUserListButton) fetchUserListButton.addEventListener('click', () => fetchUserList(usernameInput.value.trim(), statusFilter.value, importType.value));
 
-    if (usernameInput) {
-        usernameInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const username = usernameInput.value.trim();
-                const status = statusFilter.value;
-                const type = importType.value;
-                fetchUserList(username, status, type);
-            }
-        });
-    }
-
-    // Filter listeners
     [sortFilter, orderFilter, formatFilter, scoreFilter].forEach(el => {
         if (el) el.addEventListener('change', renderUserListResults);
     });
@@ -1013,6 +761,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clearListButton) clearListButton.addEventListener('click', clearList);
     if (downloadGridButton) downloadGridButton.addEventListener('click', downloadRankingGrid);
 
-    // Initial Load
     loadList();
 });

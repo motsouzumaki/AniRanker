@@ -1,23 +1,26 @@
-# ANI_RANKER_SYS [V.2]
+# AniRanker - Modern Curation System
 
-A high-tech, terminal-style interface for anime and manga ranking. This system allows users to ingest data from the AniList database, sync with user lists, and construct a definitive "Ranking Matrix" with a cyberpunk aesthetic.
+A clean, responsive web application for searching, ranking, and organizing your anime and manga lists. This system allows you to easily ingest data from AniList, sync with your personal lists, and create a beautiful "Ranking Matrix" to share.
 
-## System Features
+## Features
 
-- **Data Ingestion (Search)**: Query the AniList database for Anime, Manga, and **Characters**.
-- **Character Mode**: Dedicated search with gender filtering (Male/Female) and distinct visual styling.
-- **External DB Sync (Import)**: Pull user lists (Completed, Watching, Planning, etc.) directly from AniList accounts.
-- **Ranking Matrix**: A drag-and-drop enabled interface to order your top entries.
-- **Visual Output**: Auto-generates a shareable grid image of your ranking.
-- **Visual Mode**: High-contrast "Cyberpunk" aesthetic with neon glows, scanlines, and CRT effects.
-- **Local Persistence**: State is saved automatically to local storage.
-- **Mobile Responsive**: Fully optimized for mobile devices with adaptive layouts and touch support.
+- **Modern Soft UI**: A professional, clean interface aimed at readability and ease of use using Inter and Poppins typography.
+- **Data Ingestion**: Query the AniList database for Anime, Manga, and **Characters**.
+- **Character Mode**: Dedicated search with gender filtering (Male/Female) and intuitive visual cards.
+- **External DB Sync**: Pull your personal lists (Completed, Watching, Planning, etc.) directly from AniList.
+  - **Expanded Filters**: Filter by Format (TV, Movie, OVA, ONA, Special, Manga, Light Novel, One Shot).
+  - **Sorting**: Robust sorting options including Score, Year, and Format.
+- **Ranking Matrix**: A smooth drag-and-drop interface to order your top entries with clear visual feedback.
+- **Visual Output**: Auto-generates a high-quality grid image of your ranking for sharing.
+- **Dark Mode**: Fully supported dark theme for all elements, including metadata badges and ranking numbers.
+- **Mobile Optimized**: Responsive layout with touch-friendly drag-and-drop and optimized grid views (2-column layout on mobile).
+- **Local Persistence**: Your work is saved automatically to local storage.
 
 ## Tech Stack
 
 - **Core**: HTML5, JavaScript (ES6+)
-- **Styling**: Tailwind CSS (via CDN)
-- **Fonts**: Orbitron (Headers), JetBrains Mono (Data)
+- **Styling**: Tailwind CSS (via CDN) with custom Soft UI configuration.
+- **Fonts**: Inter (UI), Poppins (Headers)
 - **API**: AniList GraphQL API
 - **Export**: html2canvas
 
@@ -33,10 +36,10 @@ A high-tech, terminal-style interface for anime and manga ranking. This system a
     Simply open `index.html` in any modern web browser. No build step required.
 
 3.  **Operations**:
-    - **Search**: Use the "DATA_INGESTION" module to find titles or characters.
-    - **Import**: Use "EXTERNAL_DB_SYNC" to load your AniList profile data.
-    - **Rank**: Drag items in the "RANKING_MATRIX" to reorder.
-    - **Export**: Click "DOWNLOAD_PNG" to save your grid.
+    - **Search**: Use the "Database Search" module to find titles or characters.
+    - **Import**: Use "Import List" to load your AniList profile data.
+    - **Rank**: Drag items in the center list to reorder.
+    - **Export**: Click "Download PNG" to save your grid.
 
 ## File Structure
 
@@ -44,7 +47,7 @@ A high-tech, terminal-style interface for anime and manga ranking. This system a
 AniRanker/
 │
 ├── index.html          # Main interface (Tailwind CDN integrated)
-├── style.css           # Custom visual effects (Scanlines, Grid, Scrollbars)
+├── style.css           # Custom styles (Scrollbars, Animations, Drag visuals)
 ├── script.js           # System logic & API handling
 └── README.md           # System documentation
 ```
@@ -52,10 +55,9 @@ AniRanker/
 ## Mobile Support
 
 The application is fully responsive with:
-- Adaptive text sizes (smaller on mobile, larger on desktop)
-- Flexible button layouts that prevent horizontal overflow
-- Touch-enabled drag-and-drop for ranking
-- Optimized grid displays for various screen sizes
+- **Sticky Keys**: Search inputs and buttons take full width on mobile for easier tapping.
+- **Smart Grid**: Search results display in a readable 2-column grid on small screens.
+- **Touch Drag**: Optimized drag-and-drop logic prevents page scrolling while moving items.
 
 ## License
 

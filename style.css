@@ -1,55 +1,100 @@
-/* Custom Scanline Effect */
-.scanlines {
-    background: repeating-linear-gradient(0deg,
-            rgba(0, 0, 0, 0.15),
-            rgba(0, 0, 0, 0.15) 1px,
-            transparent 1px,
-            transparent 2px);
-    pointer-events: none;
+/* Modern Clean Theme Styles */
+
+/* Base Transitions */
+* {
+    transition-property: background-color, border-color, color, fill, stroke, transform, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
 }
 
-/* Background Grid Pattern */
-.bg-grid {
-    background-image:
-        linear-gradient(rgba(0, 223, 255, 0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 223, 255, 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-}
-
-/* Custom Scrollbar Styling */
+/* Custom Scrollbar - Light Mode */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #17212b;
-    border: 1px solid rgba(0, 223, 255, 0.2);
+    background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #00dfff 0%, #00a8cc 100%);
-    border-radius: 4px;
+    background: #cbd5e1;
+    /* Slate 300 */
+    border-radius: 99px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #00ffea 0%, #00dfff 100%);
+    background: #94a3b8;
+    /* Slate 400 */
+}
+
+/* Custom Scrollbar - Dark Mode Overrides */
+/* The .dark class comes from the html tag */
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #475569;
+    /* Slate 600 */
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+    /* Slate 500 */
 }
 
 /* Firefox Scrollbar */
 .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #00dfff #17212b;
+    scrollbar-color: #cbd5e1 transparent;
 }
 
-/* Drag Indicator for Ranked Items */
+.dark .custom-scrollbar {
+    scrollbar-color: #475569 transparent;
+}
+
+/* Drag & Drop Visuals */
 .ranked-item.dragging {
-    opacity: 0.5;
-    border: 2px dashed #00dfff;
+    opacity: 1.0;
+    background-color: #e0e7ff;
+    /* Indigo-100 */
+    border: 2px solid #4f46e5;
+    /* Indigo-600 */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: scale(1.05);
+    z-index: 50;
+    cursor: grabbing;
+}
+
+/* Dark mode drag state */
+.dark .ranked-item.dragging {
+    background-color: #1e293b;
+    border-color: #818cf8;
 }
 
 .ranked-item.drag-over {
-    border-top: 3px solid #00dfff;
+    border-top: 4px solid #0ea5e9;
+    /* Sky-500 */
+    margin-top: 4px;
+}
+
+.dark .ranked-item.drag-over {
+    border-top-color: #38bdf8;
+    /* Sky-400 */
+}
+
+/* Animation Utilities */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
 }
 
 /* Mobile-specific adjustments */
@@ -60,11 +105,6 @@
         overflow-x: hidden;
     }
 
-    /* Adjust grid gaps for mobile */
-    .grid {
-        gap: 0.5rem;
-    }
-
     /* Make sure buttons don't overflow */
     button {
         max-width: 100%;
@@ -73,7 +113,17 @@
 
     /* Adjust container padding */
     .container {
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
+
+    /* Adjust grid for very small screens */
+    .grid {
+        gap: 0.5rem;
+    }
+}
+
+/* Prevent scrolling while dragging on touch */
+.ranked-item.touch-dragging {
+    touch-action: none;
 }
