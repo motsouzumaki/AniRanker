@@ -263,13 +263,22 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
+
+        // Normalize data for ranking list
         const rankData = {
             id: data.id,
-            title: { romaji: title },
-            coverImage: { large: cover },
             format: type === 'CHARACTER' ? 'CHARACTER' : (format || 'ANIME'),
             startDate: { year: type === 'CHARACTER' ? '' : year }
         };
+
+        // Preserve original structure for title/name and coverImage/image
+        if (type === 'CHARACTER') {
+            rankData.name = data.name;
+            rankData.image = data.image;
+        } else {
+            rankData.title = data.title;
+            rankData.coverImage = data.coverImage;
+        }
 
         const addBtn = item.querySelector('.add-btn');
         if (addBtn) {
@@ -397,11 +406,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------------------------------------
 
     function addAnimeToList(anime) {
+        console.log('addAnimeToList called with:', anime);
+        console.log('Current rankedAnime:', rankedAnime);
+
         if (rankedAnime.some(item => item.id === anime.id)) {
             alert('Item already in list');
             return;
         }
         rankedAnime.push(anime);
+        console.log('After push, rankedAnime:', rankedAnime);
         renderRankedList();
         saveList();
     }
@@ -426,8 +439,8 @@ document.addEventListener('DOMContentLoaded', () => {
             listItem.draggable = true;
             listItem.dataset.id = anime.id;
 
-            const title = anime.title.romaji || 'Untitled';
-            const cover = anime.coverImage.large || FALLBACK_SQUARE;
+            const title = anime.title?.romaji || anime.title?.english || anime.name?.full || anime.name?.native || 'Untitled';
+            const cover = anime.coverImage?.large || anime.image?.large || FALLBACK_SQUARE;
 
             listItem.innerHTML = `
                 <div class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 font-bold rounded text-xs shrink-0 cursor-grab">
@@ -453,7 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Drag Events
             listItem.addEventListener('dragstart', handleDragStart);
-            listItem.addEventListener('drag', handleDrag); // Track mouse movement
             listItem.addEventListener('dragend', handleDragEnd);
             listItem.addEventListener('dragover', handleDragOver);
             listItem.addEventListener('drop', handleDrop);
@@ -496,8 +508,8 @@ document.addEventListener('DOMContentLoaded', () => {
         rankingGrid.innerHTML = '';
 
         rankedAnime.forEach((anime, index) => {
-            const title = anime.title.romaji || 'Untitled';
-            const cover = anime.coverImage?.large || FALLBACK_SQUARE;
+            const title = anime.title?.romaji || anime.title?.english || anime.name?.full || anime.name?.native || 'Untitled';
+            const cover = anime.coverImage?.large || anime.image?.large || FALLBACK_SQUARE;
             const safeCover = cover.replace(/"/g, '\\"');
 
             const tile = document.createElement('div');
@@ -672,48 +684,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Drag Helpers
-    function removeGhosts() {
-        document.querySelectorAll('.drag-ghost').forEach(el => el.remove());
-        currentDragGhost = null;
-    }
-
     function handleDragStart(e) {
-        removeGhosts(); // Safety cleanup
         draggedItem = this;
         this.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
-
-        // Hide default ghost
-        const emptyImage = new Image();
-        emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-        e.dataTransfer.setDragImage(emptyImage, 0, 0);
-
-        // Create Custom Ghost (Same as Touch)
-        currentDragGhost = this.cloneNode(true);
-        currentDragGhost.classList.add('drag-ghost');
-        currentDragGhost.style.width = `${this.offsetWidth}px`;
-        // Initial pos to avoid flicker (though drag event updates quickly)
-        currentDragGhost.style.left = `${e.clientX - this.offsetWidth / 2}px`;
-        currentDragGhost.style.top = `${e.clientY - this.offsetHeight / 2}px`;
-        document.body.appendChild(currentDragGhost);
-    }
-
-    function handleDrag(e) {
-        if (e.clientX === 0 && e.clientY === 0) return; // Ignore drag end quirk
-
-        if (currentDragGhost) {
-            currentDragGhost.style.left = `${e.clientX - currentDragGhost.offsetWidth / 2}px`;
-            currentDragGhost.style.top = `${e.clientY - currentDragGhost.offsetHeight / 2}px`;
-        }
     }
 
     function handleDragEnd(e) {
         this.classList.remove('dragging');
-
-        // Remove Custom Ghost
-        // Remove Custom Ghost
-        removeGhosts();
-
         rankedList.querySelectorAll('.ranked-item').forEach(item => item.classList.remove('drag-over'));
     }
     function handleDragOver(e) {
@@ -740,76 +718,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Touch Helpers: Long Press Logic
-    let longPressTimer;
+    let longPressTimer = null;
     let isTouchDragging = false;
-    let currentDragGhost = null; // Store the ghost element
     const LONG_PRESS_DURATION = 400; // ms
 
-    function handleTouchStart(e) {
-        removeGhosts(); // Safety cleanup
-        if (e.touches.length > 1) return; // Ignore multi-touch
-        const touchItem = this;
-
-        // Reset state
+    function resetTouchState() {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
         isTouchDragging = false;
+    }
+
+    function handleTouchStart(e) {
+        if (e.touches.length > 1) return; // Ignore multi-touch
+
+        // Force reset state at the start of each touch
+        resetTouchState();
+
+        const touchItem = this;
 
         // Start Timer
         longPressTimer = setTimeout(() => {
             isTouchDragging = true;
-
-            // Create Ghost
-            currentDragGhost = touchItem.cloneNode(true);
-            currentDragGhost.classList.add('drag-ghost');
-            // Set initial position immediately to avoid jump
-            const touch = e.touches[0];
-            currentDragGhost.style.left = `${touch.clientX - touchItem.offsetWidth / 2}px`;
-            currentDragGhost.style.top = `${touch.clientY - touchItem.offsetHeight / 2}px`;
-
-            // Fix width to match original
-            currentDragGhost.style.width = `${touchItem.offsetWidth}px`;
-
-            document.body.appendChild(currentDragGhost);
-
-            // Dim original
-            touchItem.classList.add('opacity-50');
-
-            if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback
+            // Native Visuals Only
+            touchItem.classList.add('dragging');
+            if (navigator.vibrate) navigator.vibrate(50);
         }, LONG_PRESS_DURATION);
     }
 
     function handleTouchMove(e) {
-        // If moved BEFORE timer fires, it's a scroll => cancel drag
         if (!isTouchDragging) {
-            clearTimeout(longPressTimer);
+            resetTouchState();
             return;
         }
 
-        // If dragging is ACTIVE => prevent scroll & move ghost
+        // Lock scroll while dragging
         if (e.cancelable) e.preventDefault();
-
-        if (currentDragGhost) {
-            const touch = e.touches[0];
-            currentDragGhost.style.left = `${touch.clientX - currentDragGhost.offsetWidth / 2}px`;
-            currentDragGhost.style.top = `${touch.clientY - currentDragGhost.offsetHeight / 2}px`;
-        }
     }
 
     function handleTouchEnd(e) {
-        clearTimeout(longPressTimer); // Cancel if tap was too short
+        const wasDragging = isTouchDragging;
 
-        // Cleanup Ghost
-        // Cleanup Ghost
-        removeGhosts();
+        // Always clear state first
+        resetTouchState();
 
-        // Restore original
-        this.classList.remove('opacity-50');
+        // Remove visuals
         this.classList.remove('dragging');
 
-        if (!isTouchDragging) return; // Was just a tap/scroll
+        if (!wasDragging) return;
 
-        isTouchDragging = false;
-
-        // Perform Drop Logic
+        // Drop Logic
         const touch = e.changedTouches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
         const targetItem = element ? element.closest('.ranked-item') : null;
