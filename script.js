@@ -841,5 +841,46 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clearListButton) clearListButton.addEventListener('click', clearList);
     if (downloadGridButton) downloadGridButton.addEventListener('click', downloadRankingGrid);
 
+    // ----------------------------------------------------------------------
+    // ## Layout Toggle Logic
+    // ----------------------------------------------------------------------
+
+    /**
+     * Generic toggle function for switching between grid and list layouts
+     * @param {string} buttonId - ID of the toggle button
+     * @param {string} containerId - ID of the container to toggle class on
+     * @param {string} toggleClass - CSS class to toggle
+     * @param {string} iconDefault - Icon class for default state
+     * @param {string} iconToggled - Icon class for toggled state
+     */
+    function setupLayoutToggle(buttonId, containerId, toggleClass, iconDefault, iconToggled) {
+        const btn = document.getElementById(buttonId);
+        const container = document.getElementById(containerId);
+
+        if (!btn || !container) return;
+
+        btn.addEventListener('click', () => {
+            // Toggle the class
+            const isActive = container.classList.toggle(toggleClass);
+
+            // Update Icon
+            const icon = btn.querySelector('i');
+            if (icon) {
+                // If class is active, show the "other" option icon
+                icon.className = isActive ? iconToggled : iconDefault;
+            }
+        });
+    }
+
+    // Initialize Layout Toggles
+    // Search Results: Default Grid -> Toggle adds .layout-list (shows List icon when in grid, Grid icon when in list)
+    setupLayoutToggle('search-layout-btn', 'searchResults', 'layout-list', 'fas fa-list', 'fas fa-th');
+
+    // Sync/Import Results: Default Grid -> Toggle adds .layout-list
+    setupLayoutToggle('sync-layout-btn', 'userListResults', 'layout-list', 'fas fa-list', 'fas fa-th');
+
+    // Ranking Matrix: Default List -> Toggle adds .layout-grid (shows Grid icon when in list, List icon when in grid)
+    setupLayoutToggle('ranking-layout-btn', 'rankedList', 'layout-grid', 'fas fa-th', 'fas fa-list');
+
     loadList();
 });

@@ -81,10 +81,14 @@
 
                 <div
                     class="bg-card-bg dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-slate-100 dark:border-slate-700 transition-colors duration-300">
-                    <h2
-                        class="text-lg font-display font-semibold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
-                        <i class="fas fa-search text-primary"></i> Database Search
-                    </h2>
+                    <div class="mb-4 flex items-center justify-between">
+                        <h2 class="text-lg font-display font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                            <i class="fas fa-search text-primary"></i> Database Search
+                        </h2>
+                        <button class="layout-toggle-btn" id="search-layout-btn" title="Switch View">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
 
                     <div class="flex flex-col gap-4">
                         <div
@@ -142,10 +146,14 @@
 
                 <div
                     class="bg-card-bg dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-slate-100 dark:border-slate-700 transition-colors duration-300">
-                    <h2
-                        class="text-lg font-display font-semibold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
-                        <i class="fas fa-cloud-download-alt text-accent"></i> Import List
-                    </h2>
+                    <div class="mb-4 flex items-center justify-between">
+                        <h2 class="text-lg font-display font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                            <i class="fas fa-cloud-download-alt text-accent"></i> Import List
+                        </h2>
+                        <button class="layout-toggle-btn" id="sync-layout-btn" title="Switch View">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                         <input type="text" id="usernameInput" placeholder="AniList Username"
@@ -246,9 +254,14 @@
                         <h2 class="text-lg font-display font-semibold text-slate-800 dark:text-slate-200">
                             Ranking Matrix
                         </h2>
-                        <span
-                            class="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded-md font-bold uppercase tracking-wider">Drag
-                            to Sort</span>
+                        <div class="flex items-center gap-2">
+                            <button class="layout-toggle-btn" id="ranking-layout-btn" title="Switch View">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <span
+                                class="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded-md font-bold uppercase tracking-wider">Drag
+                                to Sort</span>
+                        </div>
                     </div>
 
                     <div class="flex-1 overflow-y-auto custom-scrollbar p-4 bg-slate-50/30 dark:bg-black/20">
