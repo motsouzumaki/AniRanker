@@ -453,6 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Drag Events
             listItem.addEventListener('dragstart', handleDragStart);
+            listItem.addEventListener('drag', handleDrag); // Track mouse movement
             listItem.addEventListener('dragend', handleDragEnd);
             listItem.addEventListener('dragover', handleDragOver);
             listItem.addEventListener('drop', handleDrop);
@@ -671,13 +672,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Drag Helpers
+    function removeGhosts() {
+        document.querySelectorAll('.drag-ghost').forEach(el => el.remove());
+        currentDragGhost = null;
+    }
+
     function handleDragStart(e) {
+        removeGhosts(); // Safety cleanup
         draggedItem = this;
         this.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
+
+        // Hide default ghost
+        const emptyImage = new Image();
+        emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        e.dataTransfer.setDragImage(emptyImage, 0, 0);
+
+        // Create Custom Ghost (Same as Touch)
+        currentDragGhost = this.cloneNode(true);
+        currentDragGhost.classList.add('drag-ghost');
+        currentDragGhost.style.width = `${this.offsetWidth}px`;
+        // Initial pos to avoid flicker (though drag event updates quickly)
+        currentDragGhost.style.left = `${e.clientX - this.offsetWidth / 2}px`;
+        currentDragGhost.style.top = `${e.clientY - this.offsetHeight / 2}px`;
+        document.body.appendChild(currentDragGhost);
     }
+
+    function handleDrag(e) {
+        if (e.clientX === 0 && e.clientY === 0) return; // Ignore drag end quirk
+
+        if (currentDragGhost) {
+            currentDragGhost.style.left = `${e.clientX - currentDragGhost.offsetWidth / 2}px`;
+            currentDragGhost.style.top = `${e.clientY - currentDragGhost.offsetHeight / 2}px`;
+        }
+    }
+
     function handleDragEnd(e) {
         this.classList.remove('dragging');
+
+        // Remove Custom Ghost
+        // Remove Custom Ghost
+        removeGhosts();
+
         rankedList.querySelectorAll('.ranked-item').forEach(item => item.classList.remove('drag-over'));
     }
     function handleDragOver(e) {
@@ -706,9 +742,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Touch Helpers: Long Press Logic
     let longPressTimer;
     let isTouchDragging = false;
+    let currentDragGhost = null; // Store the ghost element
     const LONG_PRESS_DURATION = 400; // ms
 
     function handleTouchStart(e) {
+        removeGhosts(); // Safety cleanup
         if (e.touches.length > 1) return; // Ignore multi-touch
         const touchItem = this;
 
@@ -718,7 +756,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // Start Timer
         longPressTimer = setTimeout(() => {
             isTouchDragging = true;
-            touchItem.classList.add('dragging'); // Pop visual from style.css
+
+            // Create Ghost
+            currentDragGhost = touchItem.cloneNode(true);
+            currentDragGhost.classList.add('drag-ghost');
+            // Set initial position immediately to avoid jump
+            const touch = e.touches[0];
+            currentDragGhost.style.left = `${touch.clientX - touchItem.offsetWidth / 2}px`;
+            currentDragGhost.style.top = `${touch.clientY - touchItem.offsetHeight / 2}px`;
+
+            // Fix width to match original
+            currentDragGhost.style.width = `${touchItem.offsetWidth}px`;
+
+            document.body.appendChild(currentDragGhost);
+
+            // Dim original
+            touchItem.classList.add('opacity-50');
+
             if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback
         }, LONG_PRESS_DURATION);
     }
@@ -730,14 +784,25 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // If dragging is ACTIVE => prevent scroll
+        // If dragging is ACTIVE => prevent scroll & move ghost
         if (e.cancelable) e.preventDefault();
+
+        if (currentDragGhost) {
+            const touch = e.touches[0];
+            currentDragGhost.style.left = `${touch.clientX - currentDragGhost.offsetWidth / 2}px`;
+            currentDragGhost.style.top = `${touch.clientY - currentDragGhost.offsetHeight / 2}px`;
+        }
     }
 
     function handleTouchEnd(e) {
         clearTimeout(longPressTimer); // Cancel if tap was too short
 
-        // Remove visuals immediately
+        // Cleanup Ghost
+        // Cleanup Ghost
+        removeGhosts();
+
+        // Restore original
+        this.classList.remove('opacity-50');
         this.classList.remove('dragging');
 
         if (!isTouchDragging) return; // Was just a tap/scroll

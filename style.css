@@ -127,3 +127,13 @@
 .ranked-item.touch-dragging {
     touch-action: none;
 }
+/* CSS for the temporary floating clone */
+.drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 10000;
+    opacity: 0.9;
+    transform: rotate(2deg) scale(0.95);
+    transition: transform 0.05s ease-out;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
