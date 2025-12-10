@@ -703,23 +703,52 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
-    // Touch Helpers
-    let touchStartY = 0;
+    // Touch Helpers: Long Press Logic
+    let longPressTimer;
+    let isTouchDragging = false;
+    const LONG_PRESS_DURATION = 400; // ms
+
     function handleTouchStart(e) {
-        touchStartY = e.touches[0].clientY;
-        this.classList.add('opacity-50');
+        if (e.touches.length > 1) return; // Ignore multi-touch
+        const touchItem = this;
+
+        // Reset state
+        isTouchDragging = false;
+
+        // Start Timer
+        longPressTimer = setTimeout(() => {
+            isTouchDragging = true;
+            touchItem.classList.add('dragging'); // Pop visual from style.css
+            if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback
+        }, LONG_PRESS_DURATION);
     }
+
     function handleTouchMove(e) {
-        // Prevent scrolling if we are actively dragging an item
-        if (this.classList.contains('opacity-50')) {
-            e.preventDefault();
+        // If moved BEFORE timer fires, it's a scroll => cancel drag
+        if (!isTouchDragging) {
+            clearTimeout(longPressTimer);
+            return;
         }
+
+        // If dragging is ACTIVE => prevent scroll
+        if (e.cancelable) e.preventDefault();
     }
+
     function handleTouchEnd(e) {
-        this.classList.remove('opacity-50');
-        const touchY = e.changedTouches[0].clientY;
-        const element = document.elementFromPoint(e.changedTouches[0].clientX, touchY);
+        clearTimeout(longPressTimer); // Cancel if tap was too short
+
+        // Remove visuals immediately
+        this.classList.remove('dragging');
+
+        if (!isTouchDragging) return; // Was just a tap/scroll
+
+        isTouchDragging = false;
+
+        // Perform Drop Logic
+        const touch = e.changedTouches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
         const targetItem = element ? element.closest('.ranked-item') : null;
+
         if (targetItem && targetItem !== this) {
             const draggedId = parseInt(this.dataset.id);
             const targetId = parseInt(targetItem.dataset.id);
