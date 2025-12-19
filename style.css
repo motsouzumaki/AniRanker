@@ -392,3 +392,168 @@
 .dark .layout-grid .ranked-item {
     border-color: rgba(255, 255, 255, 0.15) !important;
 }
+
+/* ============================================ */
+/* Discovery Tabs System */
+/* ============================================ */
+.discovery-tabs {
+    display: flex;
+    border-bottom: 2px solid #e2e8f0;
+    /* Slate 200 */
+    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #64748b;
+    /* Slate 500 */
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    bottom: -2px;
+    /* Overlap bottom border */
+}
+
+.tab-btn:hover {
+    color: #475569;
+    /* Slate 600 */
+}
+
+.tab-btn.active {
+    color: #6366f1;
+    /* Primary Indigo */
+    border-bottom-color: #6366f1;
+}
+
+/* Dark mode tab styles */
+.dark .discovery-tabs {
+    border-bottom-color: #475569;
+    /* Slate 600 */
+}
+
+.dark .tab-btn {
+    color: #94a3b8;
+    /* Slate 400 */
+}
+
+.dark .tab-btn:hover {
+    color: #cbd5e1;
+    /* Slate 300 */
+}
+
+.dark .tab-btn.active {
+    color: #818cf8;
+    /* Lighter indigo for dark mode */
+    border-bottom-color: #818cf8;
+}
+
+/* Tab content visibility */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active,
+.tab-content:not(.hidden) {
+    display: block;
+}
+
+/* Full-width responsive grid adjustments */
+@media (min-width: 640px) {
+
+    #searchResults,
+    #userListResults {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 768px) {
+
+    #searchResults,
+    #userListResults {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .layout-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+    }
+}
+
+@media (min-width: 1024px) {
+
+    #searchResults,
+    #userListResults {
+        grid-template-columns: repeat(8, 1fr);
+    }
+
+    .layout-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+    }
+}
+
+@media (min-width: 1280px) {
+
+    #searchResults,
+    #userListResults {
+        grid-template-columns: repeat(10, 1fr);
+    }
+}
+
+/* ============================================ */
+/* Ranking Matrix: Adaptive Grid View */
+/* ============================================ */
+
+/* When rankedList has layout-grid class, make parent container adaptive */
+#rankedList.layout-grid {
+    /* Force container to grow with content */
+    height: auto !important;
+    min-height: 500px;
+    /* Minimum size to look good when empty */
+
+    /* Ensure Grid layout is maintained */
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important;
+    gap: 12px !important;
+    padding: 12px;
+}
+
+/* Target the parent container div when child has layout-grid */
+.flex-1:has(#rankedList.layout-grid) {
+    overflow-y: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    flex: 1 1 auto !important;
+}
+
+/* Ensure the main ranking container expands when grid is active */
+.ranking-section .h-\[600px\]:has(#rankedList.layout-grid) {
+    height: auto !important;
+    min-height: 600px;
+}
+
+/* Alternative: target by checking if rankedList space-y-2 is removed (grid mode) */
+#rankedList:not(.space-y-2) {
+    /* Grid mode detected */
+    min-height: 500px;
+}
+
+/* Ensure List View keeps its scrolling behavior */
+#rankedList.space-y-2 {
+    /* List mode - keep defaults */
+    height: auto;
+    max-height: none;
+}
+
+/* ============================================ */
+/* Export Rank Number Toggle */
+/* ============================================ */
+
+/* Hide rank badges when hide-ranks class is applied */
+#rankingGrid.hide-ranks .absolute {
+    display: none !important;
+}

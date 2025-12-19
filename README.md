@@ -1,30 +1,43 @@
 # AniRanker - Modern Curation System
 
-A clean, responsive web application for searching, ranking, and organizing your anime and manga lists. This system allows you to easily ingest data from AniList, sync with your personal lists, and create a beautiful "Ranking Matrix" to share.
+A professional, clean, and highly responsive web application designed for searching, ranking, and organizing your anime and manga lists. AniRanker integrates seamlessly with the AniList database to provide a premium curation experience.
 
-## Features
+## ✨ Key Features
 
-- **Modern Soft UI**: A professional, clean interface aimed at readability and ease of use using Inter and Poppins typography.
-- **Data Ingestion**: Query the AniList database for Anime, Manga, and **Characters**.
-- **Character Mode**: Dedicated search with gender filtering (Male/Female) and intuitive visual cards.
-- **External DB Sync**: Pull your personal lists (Completed, Watching, Planning, etc.) directly from AniList.
-  - **Expanded Filters**: Filter by Format (TV, Movie, OVA, ONA, Special, Manga, Light Novel, One Shot).
-  - **Sorting**: Robust sorting options including Score, Year, and Format.
-- **Ranking Matrix**: A smooth drag-and-drop interface to order your top entries with clear visual feedback.
-- **Visual Output**: Auto-generates a high-quality grid image of your ranking for sharing.
-- **Dark Mode**: Fully supported dark theme for all elements, including metadata badges and ranking numbers.
-- **Mobile Optimized**: Responsive layout with touch-friendly drag-and-drop and optimized grid views (2-column layout on mobile).
-- **Local Persistence**: Your work is saved automatically to local storage.
+- **Professional Soft UI**: A state-of-the-art interface utilizing glassmorphism, backdrop blur effects, and a curated color palette for maximum readability.
+- **Advanced Data Discovery**: 
+    - **Database Search**: Query AniList for Anime, Manga, and Characters.
+    - **Character Mode**: Specialized search with gender filtering and intuitive visual cards.
+    - **Import System**: Sync your personal lists (Completed, Watching, Planning, etc.) directly from your AniList profile.
+- **Flexible Layouts**: Toggle between **Grid** and **List** views across all results and the ranking matrix for personalized workflows.
+- **Intelligent Ranking Matrix**: 
+    - Smooth Drag-and-Drop functionality for desktop.
+    - Long-press touch dragging with live reordering for mobile.
+    - Contextual rank badges and manual reordering controls.
+- **Adaptive Grid Output**: Automatically syncs your ranking to a clean gallery view. Features toggleable rank numbers and high-quality PNG download via `html2canvas`.
+- **Full Dark Mode**: Robust dark theme support with persistence across sessions.
+- **Mobile First**: Fully responsive architecture with touch-optimized interactions and adaptive grid scaling.
+- **Local Persistence**: All ranking progress is automatically saved to your browser's local storage.
 
-## Tech Stack
+## 🏗️ UI Structure
 
-- **Core**: HTML5, JavaScript (ES6+)
-- **Styling**: Tailwind CSS (via CDN) with custom Soft UI configuration.
-- **Fonts**: Inter (UI), Poppins (Headers)
+AniRanker's interface is logically organized into four primary zones:
+
+1.  **Header**: Branding and system-wide theme toggling.
+2.  **Discovery (Tabs)**: Dual-purpose area for searching the global database or importing your personal collection.
+3.  **Ranking Matrix**: Your active workspace where items are added, removed, and ordered.
+4.  **Grid Output**: Visual preview and export area for sharing your final curation.
+
+## 🛠️ Tech Stack
+
+- **Core**: HTML5, Vanilla JavaScript (ES6+), CSS3
+- **Styling**: Tailwind CSS (Tailored Soft UI configuration)
 - **API**: AniList GraphQL API
 - **Export**: html2canvas
+- **Typography**: Inter (UI), Poppins (Display)
+- **Icons**: Font Awesome 6.4.0
 
-## Installation & Usage
+## 🚀 Installation & Setup
 
 1.  **Clone the Repository**:
     ```bash
@@ -32,39 +45,26 @@ A clean, responsive web application for searching, ranking, and organizing your 
     cd AniRanker
     ```
 
-2.  **Launch System**:
-    Simply open `index.html` in any modern web browser. No build step required.
+2.  **Launch**:
+    Open `index.html` in any modern web browser. No installation or build steps required.
 
-3.  **Operations**:
-    - **Search**: Use the "Database Search" module to find titles or characters.
-    - **Import**: Use "Import List" to load your AniList profile data.
-    - **Rank**: Drag items in the center list to reorder.
-    - **Export**: Click "Download PNG" to save your grid.
+## 📑 Usage Guide
 
-## File Structure
+- **Populate**: Search for titles or import your AniList profile. Click "Add" on any card to move it to your ranking.
+- **Organize**: In the **Ranking Matrix**, drag items to your desired position. Use the layout toggle (grid/list) to switch between a dense overview or a detail-rich list.
+- **Export**: Once satisfied, head to the **Grid Output** section, choose whether to show rank numbers, and click **Download PNG**.
 
-```
-AniRanker/
-│
-├── index.html          # Main interface (Tailwind CDN integrated)
-├── style.css           # Custom styles (Scrollbars, Animations, Drag visuals)
-├── script.js           # System logic & API handling
-└── README.md           # System documentation
-```
+## 📱 Mobile Experience
 
-## Mobile Support
+- **Optimized Grids**: Results scale intelligently from 2 columns on phones to 10+ columns on ultrawide monitors.
+- **Touch-safe UI**: Large hit targets and a dedicated mobile-optimized drag-and-drop system that prevents accidental page scrolls.
 
-The application is fully responsive with:
-- **Sticky Keys**: Search inputs and buttons take full width on mobile for easier tapping.
-- **Smart Grid**: Search results display in a readable 2-column grid on small screens.
-- **Touch Drag**: Optimized drag-and-drop logic prevents page scrolling while moving items.
-
-## License
+## 📄 License
 
 Distributed under the MIT License.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- [AniList API](https://anilist.co)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Font Awesome](https://fontawesome.com)
+- **[AniList API](https://anilist.co)** - Powering the global database.
+- **[Tailwind CSS](https://tailwindcss.com)** - Modern utility-first styling.
+- **[Font Awesome](https://fontawesome.com)** - Comprehensive icon set.

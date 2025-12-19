@@ -25,6 +25,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const rankingGrid = document.getElementById('rankingGrid');
     const downloadGridButton = document.getElementById('downloadGridButton');
 
+    // --- Discovery Tabs Setup ---
+    const tabSearch = document.getElementById('tab-search');
+    const tabImport = document.getElementById('tab-import');
+    const contentSearch = document.getElementById('content-search');
+    const contentImport = document.getElementById('content-import');
+
+    function setupDiscoveryTabs() {
+        if (!tabSearch || !tabImport || !contentSearch || !contentImport) return;
+
+        function switchTab(activeBtn, activeContent, inactiveBtn, inactiveContent) {
+            // Update buttons
+            activeBtn.classList.add('active');
+            inactiveBtn.classList.remove('active');
+
+            // Update content visibility
+            activeContent.classList.remove('hidden');
+            activeContent.classList.add('active');
+            inactiveContent.classList.add('hidden');
+            inactiveContent.classList.remove('active');
+        }
+
+        tabSearch.addEventListener('click', () => {
+            switchTab(tabSearch, contentSearch, tabImport, contentImport);
+        });
+
+        tabImport.addEventListener('click', () => {
+            switchTab(tabImport, contentImport, tabSearch, contentSearch);
+        });
+    }
+
+    // Initialize tabs
+    setupDiscoveryTabs();
+
     // --- State & Constants ---
     const ANILIST_API_URL = 'https://graphql.anilist.co';
     const API_HEADERS = {
@@ -830,11 +863,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (searchButton) searchButton.addEventListener('click', () => searchAniList(searchInput.value.trim(), searchType.value));
+
+    // Enter key support for username input (sync)
+    if (usernameInput) {
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                fetchUserList(usernameInput.value.trim(), statusFilter.value, importType.value);
+            }
+        });
+    }
+
     if (fetchUserListButton) fetchUserListButton.addEventListener('click', () => fetchUserList(usernameInput.value.trim(), statusFilter.value, importType.value));
 
     [sortFilter, orderFilter, formatFilter, scoreFilter].forEach(el => {
         if (el) el.addEventListener('change', renderUserListResults);
     });
+
+    // Export rank number toggle
+    const toggleExportRanks = document.getElementById('toggleExportRanks');
+    if (toggleExportRanks && rankingGrid) {
+        toggleExportRanks.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                rankingGrid.classList.remove('hide-ranks');
+            } else {
+                rankingGrid.classList.add('hide-ranks');
+            }
+        });
+    }
 
     if (saveListButton) saveListButton.addEventListener('click', saveList);
     if (exportListButton) exportListButton.addEventListener('click', exportList);
