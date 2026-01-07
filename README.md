@@ -9,11 +9,18 @@ A professional, clean, and highly responsive web application designed for search
     - **Database Search**: Query AniList for Anime, Manga, and Characters.
     - **Character Mode**: Specialized search with gender filtering and intuitive visual cards.
     - **Import System**: Sync your personal lists (Completed, Watching, Planning, etc.) directly from your AniList profile.
+- **Custom Image Support**: 
+    - **Multi-Upload**: Upload multiple local images at once.
+    - **Inline Renaming**: Edit titles for custom images directly from the ranking matrix.
+    - **Amber Badge**: Clearly distinguishes personal uploads from AniList entries.
+- **Advanced Data Management**:
+    - **JSON Backup System**: Full import/export of your entire ranking list, including custom images (Base64).
+    - **Share Links**: Generate lightweight, shareable URL hashes for your AniList-based rankings.
 - **Flexible Layouts**: Toggle between **Grid** and **List** views across all results and the ranking matrix for personalized workflows.
 - **Intelligent Ranking Matrix**: 
     - Smooth Drag-and-Drop functionality for desktop.
     - Long-press touch dragging with live reordering for mobile.
-    - Contextual rank badges and manual reordering controls.
+    - Contextual rank badges and permanent reordering controls for immediate access.
 - **Adaptive Grid Output**: Automatically syncs your ranking to a clean gallery view. Features toggleable rank numbers and high-quality PNG download via `html2canvas`.
 - **Full Dark Mode**: Robust dark theme support with persistence across sessions.
 - **Mobile First**: Fully responsive architecture with touch-optimized interactions and adaptive grid scaling.
@@ -25,8 +32,9 @@ AniRanker's interface is logically organized into four primary zones:
 
 1.  **Header**: Branding and system-wide theme toggling.
 2.  **Discovery (Tabs)**: Dual-purpose area for searching the global database or importing your personal collection.
-3.  **Ranking Matrix**: Your active workspace where items are added, removed, and ordered.
-4.  **Grid Output**: Visual preview and export area for sharing your final curation.
+3.  **Tools & Formats**: Management zone for custom uploads, JSON backups, and shareable links.
+4.  **Ranking Matrix**: Your active workspace where items are added, removed, and ordered.
+5.  **Grid Output**: Visual preview and export area for sharing your final curation.
 
 ## 🛠️ Tech Stack
 
@@ -50,8 +58,13 @@ AniRanker's interface is logically organized into four primary zones:
 
 ## 📑 Usage Guide
 
-- **Populate**: Search for titles or import your AniList profile. Click "Add" on any card to move it to your ranking.
+- **Populate**: Search for titles, import your AniList profile, or use the **Add Custom Image** tool to upload your own files (supports multi-select). 
 - **Organize**: In the **Ranking Matrix**, drag items to your desired position. Use the layout toggle (grid/list) to switch between a dense overview or a detail-rich list.
+- **Edit**: For custom items, click the amber edit icon (✏️) to rename them at any time. controls for moving and removing items are always visible for convenience.
+- **Share & Backup**:
+    - **Share Link**: Click to generate a lightweight URL hash and copy it to your clipboard. Perfect for sharing your list of AniList items.
+    - **Save Backup**: Download a full JSON backup of your current list, including custom images.
+    - **Load Backup**: Restore your previous curations by importing a JSON backup file.
 - **Export**: Once satisfied, head to the **Grid Output** section, choose whether to show rank numbers, and click **Download PNG**.
 
 ## 📱 Mobile Experience

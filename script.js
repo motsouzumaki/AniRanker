@@ -442,6 +442,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('addAnimeToList called with:', anime);
         console.log('Current rankedAnime:', rankedAnime);
 
+        // Ensure type field exists (backward compatibility)
+        if (!anime.type) {
+            anime.type = 'anilist';
+        }
+
         if (rankedAnime.some(item => item.id === anime.id)) {
             alert('Item already in list');
             return;
@@ -473,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
             listItem.dataset.id = anime.id;
 
             const title = anime.title?.romaji || anime.title?.english || anime.name?.full || anime.name?.native || 'Untitled';
-            const cover = anime.coverImage?.large || anime.image?.large || FALLBACK_SQUARE;
+            const cover = anime.customImage || anime.coverImage?.large || anime.image?.large || FALLBACK_SQUARE;
 
             listItem.innerHTML = `
                 <div class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 font-bold rounded text-xs shrink-0 cursor-grab">
@@ -484,7 +489,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="text-slate-700 dark:text-slate-200 font-medium text-sm truncate leading-tight">${title}</div>
                     <div class="text-[10px] text-slate-400">${anime.format || 'N/A'} • ${anime.startDate?.year || '????'}</div>
                 </div>
-                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="flex items-center gap-1 transition-opacity">
+                    ${anime.type === 'custom' ? `
+                        <button class="edit-btn w-6 h-6 flex items-center justify-center rounded bg-amber-50 dark:bg-amber-900/20 text-amber-500 hover:bg-amber-500 hover:text-white transition-colors" title="Rename">
+                            <i class="fas fa-edit text-[10px]"></i>
+                        </button>
+                    ` : ''}
                     <button class="rank-btn rank-up w-6 h-6 flex items-center justify-center rounded bg-slate-50 dark:bg-slate-800 hover:bg-primary hover:text-white text-slate-400 transition-colors">
                         <i class="fas fa-chevron-up text-[10px]"></i>
                     </button>
@@ -518,6 +528,17 @@ document.addEventListener('DOMContentLoaded', () => {
             downBtn.addEventListener('click', (e) => { e.stopPropagation(); moveAnime(anime.id, 1); });
             listItem.querySelector('.remove-btn').addEventListener('click', (e) => { e.stopPropagation(); removeAnimeFromList(anime.id); });
 
+            // Edit button for custom images
+            if (anime.type === 'custom') {
+                const editBtn = listItem.querySelector('.edit-btn');
+                if (editBtn) {
+                    editBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        renameCustomItem(anime.id);
+                    });
+                }
+            }
+
             rankedList.appendChild(listItem);
         });
 
@@ -542,7 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         rankedAnime.forEach((anime, index) => {
             const title = anime.title?.romaji || anime.title?.english || anime.name?.full || anime.name?.native || 'Untitled';
-            const cover = anime.coverImage?.large || anime.image?.large || FALLBACK_SQUARE;
+            const cover = anime.customImage || anime.coverImage?.large || anime.image?.large || FALLBACK_SQUARE;
             const safeCover = cover.replace(/"/g, '\\"');
 
             const tile = document.createElement('div');
@@ -668,6 +689,20 @@ document.addEventListener('DOMContentLoaded', () => {
         rankedAnime = rankedAnime.filter(anime => anime.id !== animeId);
         renderRankedList();
         saveList();
+    }
+
+    function renameCustomItem(itemId) {
+        const item = rankedAnime.find(a => a.id === itemId);
+        if (!item || item.type !== 'custom') return;
+
+        const currentTitle = item.title?.romaji || item.title?.english || 'Untitled';
+        const newTitle = prompt('Rename custom image:', currentTitle);
+
+        if (newTitle && newTitle.trim() !== '' && newTitle.trim() !== currentTitle) {
+            item.title.romaji = newTitle.trim();
+            renderRankedList();
+            saveList();
+        }
     }
 
     function saveList() {
@@ -897,6 +932,306 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clearListButton) clearListButton.addEventListener('click', clearList);
     if (downloadGridButton) downloadGridButton.addEventListener('click', downloadRankingGrid);
 
+
+    // ----------------------------------------------------------------------
+    // ## Advanced Data Management Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Handle custom image upload from local file system (supports multiple files)
+     */
+    function handleCustomImageUpload(event) {
+        const files = Array.from(event.target.files);
+        if (files.length === 0) return;
+
+        // Validate all files are images
+        const invalidFiles = files.filter(f => !f.type.startsWith('image/'));
+        if (invalidFiles.length > 0) {
+            alert('Please select only image files');
+            return;
+        }
+
+        // Process each file
+        let processedCount = 0;
+        files.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64 = e.target.result;
+
+                // Create custom item with generic title (can be edited later)
+                const customItem = {
+                    type: 'custom',
+                    id: `custom_${Date.now()}_${index}`,
+                    title: { romaji: `Custom Image ${rankedAnime.filter(a => a.type === 'custom').length + 1}` },
+                    customImage: base64,
+                    format: 'CUSTOM',
+                    startDate: { year: new Date().getFullYear() }
+                };
+
+                addAnimeToList(customItem);
+
+                processedCount++;
+                if (processedCount === files.length) {
+                    // Show success message after all files processed
+                    alert(`Successfully added ${files.length} custom image${files.length > 1 ? 's' : ''}!\n\nTip: Click the ✏️ icon to rename items.`);
+                }
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        // Reset input to allow re-uploading the same files
+        event.target.value = '';
+    }
+
+    /**
+     * Export ranking data to JSON file (includes custom images as Base64)
+     */
+    function exportToJSON() {
+        if (rankedAnime.length === 0) {
+            alert('No items to export');
+            return;
+        }
+
+        const exportData = rankedAnime.map(item => {
+            if (item.type === 'custom') {
+                return {
+                    type: 'custom',
+                    title: item.title.romaji || item.title.english,
+                    image: item.customImage
+                };
+            } else {
+                return {
+                    type: 'anilist',
+                    id: item.id
+                };
+            }
+        });
+
+        const jsonString = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `aniranker_backup_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Show success feedback
+        const btn = document.getElementById('btn-export-json');
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check mr-2"></i> Exported!';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
+        }
+    }
+
+    /**
+     * Fetch a single AniList item by ID
+     */
+    async function fetchAniListItemById(id) {
+        const query = `
+            query ($id: Int) {
+                Media(id: $id) {
+                    id
+                    title { romaji english }
+                    coverImage { large }
+                    startDate { year }
+                    format
+                    type
+                }
+            }
+        `;
+
+        try {
+            const response = await fetch(ANILIST_API_URL, {
+                method: 'POST',
+                headers: API_HEADERS,
+                body: JSON.stringify({ query, variables: { id } })
+            });
+
+            const data = await response.json();
+            return data.data?.Media || null;
+        } catch (error) {
+            console.error(`Failed to fetch item ${id}:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Import ranking data from JSON file
+     */
+    async function importFromJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const importData = JSON.parse(e.target.result);
+
+                if (!Array.isArray(importData)) {
+                    throw new Error('Invalid backup file format');
+                }
+
+                if (importData.length === 0) {
+                    alert('Backup file is empty');
+                    return;
+                }
+
+                // Confirm before clearing current list
+                if (rankedAnime.length > 0) {
+                    if (!confirm(`This will replace your current ${rankedAnime.length} item(s). Continue?`)) {
+                        return;
+                    }
+                }
+
+                // Show loading state
+                rankedList.innerHTML = '<div class="text-center py-12 text-primary animate-pulse"><i class="fas fa-sync fa-spin mr-2"></i>Importing backup...</div>';
+
+                // Clear current list
+                rankedAnime = [];
+
+                // Process each item
+                for (const item of importData) {
+                    if (item.type === 'custom') {
+                        // Recreate custom item
+                        rankedAnime.push({
+                            type: 'custom',
+                            id: `custom_${Date.now()}_${Math.random()}`,
+                            title: { romaji: item.title },
+                            customImage: item.image,
+                            format: 'CUSTOM',
+                            startDate: { year: '' }
+                        });
+                    } else if (item.type === 'anilist') {
+                        // Fetch AniList item
+                        const fetchedItem = await fetchAniListItemById(item.id);
+                        if (fetchedItem) {
+                            fetchedItem.type = 'anilist';
+                            rankedAnime.push(fetchedItem);
+                        }
+                    }
+                }
+
+                renderRankedList();
+                saveList();
+                alert(`Successfully imported ${rankedAnime.length} items!`);
+
+            } catch (error) {
+                console.error('Import error:', error);
+                alert('Failed to import backup file. Please check the file format.');
+                renderRankedList(); // Restore UI
+            }
+        };
+
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    /**
+     * Generate shareable link with URL hash (AniList items only)
+     */
+    function generateShareLink() {
+        if (rankedAnime.length === 0) {
+            alert('No items to share');
+            return;
+        }
+
+        // Filter only AniList items
+        const anilistItems = rankedAnime.filter(item => item.type !== 'custom');
+        const customCount = rankedAnime.length - anilistItems.length;
+
+        if (anilistItems.length === 0) {
+            alert('No AniList items to share. Your list only contains custom images.');
+            return;
+        }
+
+        // Create payload: array of IDs in order
+        const ids = anilistItems.map(item => item.id);
+
+        // Encode to Base64
+        const jsonString = JSON.stringify(ids);
+        const base64 = btoa(jsonString);
+
+        // Update URL hash
+        window.location.hash = base64;
+
+        // Copy to clipboard
+        const shareUrl = window.location.href;
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            let message = 'Share link copied to clipboard!';
+            if (customCount > 0) {
+                message += `\n\nNote: ${customCount} custom image(s) excluded from link.`;
+            }
+            alert(message);
+
+            // Show success feedback on button
+            const btn = document.getElementById('btn-share-link');
+            if (btn) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i> Link Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            }
+        }).catch(() => {
+            prompt('Copy this link:', shareUrl);
+        });
+    }
+
+    /**
+     * Load ranking from URL hash
+     */
+    async function loadFromHash() {
+        const hash = window.location.hash.slice(1);
+        if (!hash) return;
+
+        try {
+            // Decode Base64
+            const jsonString = atob(hash);
+            const ids = JSON.parse(jsonString);
+
+            if (!Array.isArray(ids) || ids.length === 0) return;
+
+            // Confirm before loading if there's existing data
+            if (rankedAnime.length > 0) {
+                if (!confirm(`Load shared ranking (${ids.length} items)? This will replace your current list.`)) {
+                    // Clear hash if user declines
+                    window.location.hash = '';
+                    return;
+                }
+            }
+
+            // Show loading state
+            rankedList.innerHTML = '<div class="text-center py-12 text-primary animate-pulse"><i class="fas fa-sync fa-spin mr-2"></i>Loading shared ranking...</div>';
+
+            // Fetch all items
+            rankedAnime = [];
+            for (const id of ids) {
+                const item = await fetchAniListItemById(id);
+                if (item) {
+                    item.type = 'anilist';
+                    rankedAnime.push(item);
+                }
+            }
+
+            renderRankedList();
+            saveList();
+
+            // Clear hash after loading
+            window.history.replaceState(null, null, ' ');
+
+        } catch (error) {
+            console.error('Failed to load from hash:', error);
+            window.location.hash = '';
+        }
+    }
+
     // ----------------------------------------------------------------------
     // ## Layout Toggle Logic
     // ----------------------------------------------------------------------
@@ -938,5 +1273,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ranking Matrix: Default List -> Toggle adds .layout-grid (shows Grid icon when in list, List icon when in grid)
     setupLayoutToggle('ranking-layout-btn', 'rankedList', 'layout-grid', 'fas fa-th', 'fas fa-list');
 
-    loadList();
+    // ----------------------------------------------------------------------
+    // ## Event Listeners for Data Management
+    // ----------------------------------------------------------------------
+
+    // Custom Image Upload
+    const customUploadInput = document.getElementById('custom-upload');
+    if (customUploadInput) {
+        customUploadInput.addEventListener('change', handleCustomImageUpload);
+    }
+
+    // JSON Export
+    const btnExportJSON = document.getElementById('btn-export-json');
+    if (btnExportJSON) {
+        btnExportJSON.addEventListener('click', exportToJSON);
+    }
+
+    // JSON Import
+    const jsonUploadInput = document.getElementById('json-upload');
+    if (jsonUploadInput) {
+        jsonUploadInput.addEventListener('change', importFromJSON);
+    }
+
+    // Share Link
+    const btnShareLink = document.getElementById('btn-share-link');
+    if (btnShareLink) {
+        btnShareLink.addEventListener('click', generateShareLink);
+    }
+
+    // Load from hash on page load (must be called before loadList to allow hash to take precedence)
+    loadFromHash().then(() => {
+        // Only load from localStorage if hash didn't load anything
+        if (rankedAnime.length === 0) {
+            loadList();
+        }
+    });
 });
